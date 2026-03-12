@@ -161,11 +161,7 @@ export default function VaultPage({ setPage, setArticle }) {
           </div>
           <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
             {articles.map(({ tag, date, readTime, title, preview, color, id, comingSoon }) => (
-              <GBox key={id} accent={color} style={{ padding: "32px 36px", cursor: comingSoon ? "default" : "pointer", transition: "transform 0.2s, box-shadow 0.2s" }}
-                onClick={() => !comingSoon && setPage && setPage("Article_" + id)}
-                onMouseEnter={e => { if (!comingSoon) { e.currentTarget.style.transform = "translateY(-2px)"; e.currentTarget.style.boxShadow = `0 8px 32px ${color}22`; }}}
-                onMouseLeave={e => { e.currentTarget.style.transform = "translateY(0)"; e.currentTarget.style.boxShadow = "none"; }}
-              >
+              <GBox key={id} accent={color} style={{ padding: "32px 36px", cursor: comingSoon ? "default" : "pointer" }}>
                 <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 14, flexWrap: "wrap" }}>
                   <Pill text={tag} color={color} />
                   <span style={{ fontSize: 13, color: "rgba(255,255,255,0.5)", fontFamily: "Georgia, serif" }}>{date}</span>
@@ -174,7 +170,14 @@ export default function VaultPage({ setPage, setArticle }) {
                 </div>
                 <h3 style={{ fontSize: "clamp(16px,2vw,22px)", fontWeight: 900, color: C.white, margin: "0 0 12px", fontFamily: "Georgia, serif" }}>{title}</h3>
                 <p style={{ fontSize: 14, color: "rgba(255,255,255,0.68)", lineHeight: 1.8, margin: "0 0 16px", fontFamily: "Georgia, serif" }}>{preview}</p>
-                {!comingSoon && <span style={{ fontSize: 12, color, fontFamily: "'Courier New', monospace", letterSpacing: 1 }}>Read article →</span>}
+                {!comingSoon && (
+                  <button onClick={() => setPage("Article_" + id)} style={{
+                    background: "transparent", border: `1px solid ${color}55`,
+                    borderRadius: 6, padding: "8px 18px", color, fontSize: 12,
+                    cursor: "pointer", fontFamily: "'Courier New', monospace",
+                    letterSpacing: 1, fontWeight: 600,
+                  }}>Read article →</button>
+                )}
               </GBox>
             ))}
           </div>

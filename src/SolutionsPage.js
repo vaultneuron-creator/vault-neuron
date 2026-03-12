@@ -3,8 +3,8 @@ import { C } from "./tokens";
 const Pill = ({ text, color = C.purple }) => (
   <span style={{ background: color + "18", border: `1px solid ${color}44`, borderRadius: 4, padding: "3px 12px", fontSize: 10, color, fontFamily: "'Courier New', monospace", letterSpacing: 3, textTransform: "uppercase", display: "inline-block" }}>{text}</span>
 );
-const GBox = ({ children, style = {}, accent = C.purple }) => (
-  <div style={{ background: C.panel, border: `1px solid ${accent}33`, borderRadius: 12, boxShadow: `0 0 40px ${accent}10, inset 0 1px 0 ${accent}18`, ...style }}>{children}</div>
+const GBox = ({ children, style = {}, accent = C.purple, id }) => (
+  <div id={id} style={{ background: C.panel, border: `1px solid ${accent}33`, borderRadius: 12, boxShadow: `0 0 40px ${accent}10, inset 0 1px 0 ${accent}18`, ...style }}>{children}</div>
 );
 const Btn = ({ children, onClick, variant = "primary", style = {} }) => (
   <button onClick={onClick} style={{
@@ -125,8 +125,8 @@ export default function SolutionsPage({ setPage }) {
             </h2>
           </div>
           <div style={{ display: "flex", flexDirection: "column", gap: 40 }}>
-            {phases.map(({ step, name, subtitle, color, icon, tagline, intro, what, capabilities, deliverables, outcome, note }) => (
-              <GBox key={name} accent={color} style={{ padding: "44px 40px" }}>
+            {phases.map(({ step, name, subtitle, color, icon, tagline, intro, what, capabilities, deliverables, outcome, note }, idx) => (
+              <GBox key={name} accent={color} style={{ padding: "44px 40px" }} id={`phase-${idx + 1}`}>
                 <div style={{ display: "grid", gridTemplateColumns: "auto 1fr", gap: 28, alignItems: "start", marginBottom: 32, borderBottom: `1px solid ${color}22`, paddingBottom: 28 }}>
                   <div style={{ textAlign: "center", minWidth: 60 }}>
                     <div style={{ fontSize: 10, color, letterSpacing: 3, fontFamily: "'Courier New', monospace", textTransform: "uppercase", marginBottom: 8 }}>{step}</div>

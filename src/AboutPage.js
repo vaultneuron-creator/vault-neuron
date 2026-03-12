@@ -20,7 +20,6 @@ const credentials = [
   { label: "Military Police & Ordnance Officer", detail: "Operational discipline, security protocols, and mission-critical execution under pressure — where systems have to work the first time." },
   { label: "Cross-Dock Supervisor", detail: "High-volume distribution operations, logistics coordination, and workforce management at scale." },
   { label: "Branch Manager", detail: "Full P&L ownership and operational accountability — leading the company's largest branch end to end." },
-  { label: "Program Manager — C-17 Program", detail: "Complex multi-stakeholder program management, technical documentation, and compliance systems in a DoD environment." },
   { label: "Business Intelligence Analyst", detail: "Enterprise data infrastructure, AI integration, and operational reporting systems within the U.S. Air Force civilian sector." },
   { label: "M.S. Transportation & Logistics Management", detail: "Graduate-level systems thinking applied to industrial operations and supply chain architecture." },
 ];
@@ -182,4 +181,3 @@ export default function AboutPage({ setPage }) {
     </div>
   );
 }
-
