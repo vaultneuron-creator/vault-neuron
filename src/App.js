@@ -6,16 +6,24 @@ import VaultPage from "./VaultPage";
 import AboutPage from "./AboutPage";
 import AssessmentPage from "./AssessmentPage";
 import SystemInitializedPage from "./SystemInitializedPage";
+import BlogPage from "./BlogPage";
 import { TermsPage, PrivacyPage } from "./LegalPages";
 
 export default function App() {
   const [page, setPage] = useState("Home");
   const [results, setResults] = useState(null);
+  const [articleId, setArticleId] = useState(null);
+
   useEffect(() => { window.scrollTo({ top: 0, behavior: "smooth" }); }, [page]);
 
   const go = (p) => {
-    if (p !== "Results") setResults(null);
-    setPage(p);
+    if (p.startsWith("Article_")) {
+      setArticleId(p.replace("Article_", ""));
+      setPage("Article");
+    } else {
+      if (p !== "Results") setResults(null);
+      setPage(p);
+    }
   };
 
   const handleAssessmentComplete = (r) => {
@@ -33,6 +41,7 @@ export default function App() {
       case "About":      return <AboutPage setPage={go} />;
       case "Assessment": return <AssessmentPage setPage={go} onComplete={handleAssessmentComplete} />;
       case "Results":    return <SystemInitializedPage results={results} setPage={go} />;
+      case "Article":    return <BlogPage articleId={articleId} setPage={go} />;
       case "Terms":      return <TermsPage setPage={go} />;
       case "Privacy":    return <PrivacyPage setPage={go} />;
       default:           return <HomePage setPage={go} />;
