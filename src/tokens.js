@@ -1,3 +1,5 @@
+import { useState, useEffect } from "react";
+
 export const C = {
   bg:      "#07070F",
   dark:    "#0B0B18",
@@ -16,4 +18,35 @@ export const C = {
   slate:   "#7880A0",
   light:   "#B8C2DC",
   green:   "#10B981",
+  red:     "#EF4444",
 };
+
+export const useFade = (delay = 0) => {
+  const [visible, setVisible] = useState(false);
+  useEffect(() => {
+    const t = setTimeout(() => setVisible(true), delay);
+    return () => clearTimeout(t);
+  }, [delay]);
+  return {
+    style: {
+      opacity: visible ? 1 : 0,
+      transform: visible ? "translateY(0)" : "translateY(16px)",
+      transition: "opacity 0.6s ease, transform 0.6s ease",
+    },
+  };
+};
+
+export const Tag = ({ text, color = C.teal }) => (
+  <span style={{
+    background: color + "18",
+    border: `1px solid ${color}44`,
+    borderRadius: 4,
+    padding: "3px 12px",
+    fontSize: 10,
+    color,
+    fontFamily: "'Courier New', monospace",
+    letterSpacing: 3,
+    textTransform: "uppercase",
+    display: "inline-block",
+  }}>{text}</span>
+);
