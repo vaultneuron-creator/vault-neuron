@@ -810,6 +810,7 @@ async function submitDiagnostic() {
 
   try {
     await fetch(WEBHOOK_URL, {
+      mode: 'no-cors',
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ action: 'submitTeamDiagnostic', data: payload })
