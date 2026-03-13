@@ -1,0 +1,832 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Vault Neuron — Team Diagnostic</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #080810;
+    --bg2: #0d0d1a;
+    --card: #14142a;
+    --border: #1e1e3a;
+    --teal: #00b4d8;
+    --teal-dim: rgba(0,180,216,0.12);
+    --purple: #7b2fbe;
+    --purple-dim: rgba(123,47,190,0.15);
+    --amber: #ffb347;
+    --red: #ff4444;
+    --white: #f0f0fa;
+    --muted: #6666a0;
+    --mid: #9999cc;
+    --font-display: 'Syne', sans-serif;
+    --font-body: 'DM Sans', sans-serif;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--white);
+    font-family: var(--font-body);
+    font-size: 15px;
+    line-height: 1.6;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(123,47,190,0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(123,47,190,0.03) 1px, transparent 1px);
+    background-size: 60px 60px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* ── GATE ── */
+  #gate {
+    position: fixed;
+    inset: 0;
+    background: var(--bg);
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    gap: 2rem;
+    padding: 2rem;
+  }
+
+  #gate.hidden { display: none; }
+
+  .gate-logo { display: flex; align-items: center; gap: 12px; margin-bottom: 1rem; }
+  .gate-logo svg { width: 44px; height: 44px; }
+  .gate-logo-text { font-family: var(--font-display); font-size: 1.1rem; font-weight: 700; letter-spacing: 0.15em; }
+  .gate-logo-sub { font-size: 0.7rem; color: var(--purple); letter-spacing: 0.1em; text-transform: uppercase; }
+
+  .gate-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 2.5rem;
+    max-width: 480px;
+    width: 100%;
+    text-align: center;
+  }
+
+  .anon-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: rgba(0,180,216,0.1);
+    border: 1px solid rgba(0,180,216,0.3);
+    border-radius: 20px;
+    padding: 0.4rem 1rem;
+    font-size: 0.78rem;
+    color: var(--teal);
+    font-family: var(--font-display);
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    margin-bottom: 1.2rem;
+  }
+
+  .gate-title { font-family: var(--font-display); font-size: 1.4rem; font-weight: 700; margin-bottom: 0.5rem; }
+  .gate-sub { color: var(--muted); font-size: 0.9rem; margin-bottom: 2rem; line-height: 1.6; }
+  .gate-error { color: var(--red); font-size: 0.85rem; margin-top: 0.75rem; min-height: 20px; }
+
+  /* ── INPUTS ── */
+  input[type="text"], textarea, select {
+    width: 100%;
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 0.75rem 1rem;
+    color: var(--white);
+    font-family: var(--font-body);
+    font-size: 0.95rem;
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+  }
+
+  input:focus, textarea:focus { border-color: var(--purple); box-shadow: 0 0 0 3px var(--purple-dim); }
+  textarea { resize: vertical; min-height: 90px; }
+
+  /* ── BUTTONS ── */
+  .btn-primary {
+    background: linear-gradient(135deg, var(--purple), #5a1f8a);
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    padding: 0.85rem 2rem;
+    font-family: var(--font-display);
+    font-size: 0.9rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: opacity 0.2s, transform 0.1s;
+    width: 100%;
+  }
+
+  .btn-primary:hover { opacity: 0.9; transform: translateY(-1px); }
+
+  .btn-nav {
+    background: transparent;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 0.7rem 1.5rem;
+    color: var(--mid);
+    font-family: var(--font-body);
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .btn-nav:hover { border-color: var(--purple); color: var(--purple); }
+
+  .btn-next {
+    background: linear-gradient(135deg, var(--purple), #5a1f8a);
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    padding: 0.7rem 2rem;
+    font-family: var(--font-display);
+    font-size: 0.85rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .btn-next:hover { opacity: 0.9; transform: translateY(-1px); }
+
+  /* ── LAYOUT ── */
+  #app { position: relative; z-index: 1; max-width: 700px; margin: 0 auto; padding: 2rem 1.5rem 6rem; display: none; }
+
+  .topbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1.5rem 0 2rem;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 2.5rem;
+  }
+
+  .topbar-logo { display: flex; align-items: center; gap: 10px; }
+  .topbar-logo svg { width: 32px; height: 32px; }
+  .topbar-name { font-family: var(--font-display); font-size: 0.85rem; font-weight: 700; letter-spacing: 0.12em; }
+  .topbar-label { font-size: 0.72rem; color: var(--purple); letter-spacing: 0.08em; text-transform: uppercase; }
+
+  .anon-pill {
+    background: var(--teal-dim);
+    border: 1px solid rgba(0,180,216,0.3);
+    border-radius: 20px;
+    padding: 0.3rem 0.8rem;
+    font-size: 0.72rem;
+    color: var(--teal);
+    font-family: var(--font-display);
+    font-weight: 600;
+    letter-spacing: 0.06em;
+  }
+
+  /* ── PROGRESS ── */
+  .progress-wrap { margin-bottom: 2.5rem; }
+  .progress-meta { display: flex; justify-content: space-between; margin-bottom: 0.6rem; }
+  .progress-label { font-family: var(--font-display); font-size: 0.75rem; font-weight: 700; color: var(--purple); letter-spacing: 0.1em; text-transform: uppercase; }
+  .progress-count { font-size: 0.8rem; color: var(--muted); }
+  .progress-bar { height: 3px; background: var(--border); border-radius: 2px; overflow: hidden; }
+  .progress-fill { height: 100%; background: linear-gradient(90deg, var(--purple), var(--teal)); border-radius: 2px; transition: width 0.4s ease; }
+
+  /* ── SECTIONS ── */
+  .section { display: none; animation: fadeIn 0.3s ease; }
+  .section.active { display: block; }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .section-header { margin-bottom: 2rem; }
+  .section-eyebrow { font-size: 0.72rem; font-weight: 600; letter-spacing: 0.15em; text-transform: uppercase; color: var(--purple); font-family: var(--font-display); margin-bottom: 0.4rem; }
+  .section-title { font-family: var(--font-display); font-size: 1.5rem; font-weight: 800; color: var(--white); line-height: 1.2; margin-bottom: 0.6rem; }
+  .section-desc { color: var(--mid); font-size: 0.9rem; line-height: 1.6; }
+
+  /* ── QUESTIONS ── */
+  .question-block {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 1.5rem;
+    margin-bottom: 1rem;
+    transition: border-color 0.2s;
+  }
+
+  .question-block:focus-within { border-color: rgba(123,47,190,0.3); }
+  .question-block.required-error { border-color: var(--red); }
+
+  .q-label { font-size: 0.95rem; font-weight: 500; color: var(--white); margin-bottom: 1rem; line-height: 1.5; }
+  .q-label .req { color: var(--purple); margin-left: 3px; }
+  .q-hint { font-size: 0.8rem; color: var(--muted); margin-bottom: 0.75rem; font-style: italic; }
+
+  .options { display: flex; flex-direction: column; gap: 0.5rem; }
+
+  .option-label {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.75rem;
+    padding: 0.65rem 0.85rem;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.15s;
+    line-height: 1.4;
+  }
+
+  .option-label:hover { border-color: var(--purple); background: var(--purple-dim); }
+
+  .option-label input[type="radio"] {
+    width: auto;
+    background: none;
+    border: none;
+    padding: 0;
+    margin-top: 2px;
+    accent-color: var(--purple);
+    flex-shrink: 0;
+  }
+
+  .option-label input:focus { box-shadow: none; }
+  .option-label.selected { border-color: var(--purple); background: var(--purple-dim); }
+
+  /* ── NAV ── */
+  .nav-bar { display: flex; justify-content: space-between; align-items: center; margin-top: 2rem; padding-top: 1.5rem; border-top: 1px solid var(--border); }
+
+  /* ── ANON REMINDER ── */
+  .anon-reminder {
+    background: var(--teal-dim);
+    border: 1px solid rgba(0,180,216,0.2);
+    border-radius: 10px;
+    padding: 0.85rem 1rem;
+    font-size: 0.82rem;
+    color: var(--teal);
+    margin-bottom: 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  /* ── COMPLETION ── */
+  .completion { text-align: center; padding: 3rem 1rem; }
+  .completion-icon { width: 72px; height: 72px; background: var(--purple-dim); border: 2px solid var(--purple); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 1.5rem; font-size: 2rem; }
+  .completion-title { font-family: var(--font-display); font-size: 2rem; font-weight: 800; margin-bottom: 0.75rem; }
+  .completion-sub { color: var(--mid); font-size: 1rem; max-width: 460px; margin: 0 auto; line-height: 1.7; }
+
+  /* ── SPINNER ── */
+  .submitting-overlay { position: fixed; inset: 0; background: rgba(8,8,16,0.85); z-index: 200; display: none; align-items: center; justify-content: center; flex-direction: column; gap: 1rem; }
+  .submitting-overlay.show { display: flex; }
+
+  @keyframes spin { to { transform: rotate(360deg); } }
+</style>
+</head>
+<body>
+
+<div class="submitting-overlay" id="submittingOverlay">
+  <div style="width:48px;height:48px;border:3px solid var(--border);border-top-color:var(--purple);border-radius:50%;animation:spin 0.7s linear infinite;"></div>
+  <div style="color:var(--purple);font-family:var(--font-display);font-size:1rem;font-weight:600;letter-spacing:0.1em;">SUBMITTING...</div>
+</div>
+
+<!-- GATE -->
+<div id="gate">
+  <div class="gate-logo">
+    <svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M50 5 L90 25 L90 75 L50 95 L10 75 L10 25 Z" stroke="#7b2fbe" stroke-width="3" fill="none"/>
+      <circle cx="50" cy="30" r="8" fill="#00b4d8"/>
+      <circle cx="25" cy="65" r="6" fill="#7b2fbe"/>
+      <circle cx="75" cy="65" r="6" fill="#7b2fbe"/>
+      <circle cx="50" cy="72" r="5" fill="#7b2fbe"/>
+      <line x1="50" y1="38" x2="25" y2="59" stroke="#00b4d8" stroke-width="2"/>
+      <line x1="50" y1="38" x2="75" y2="59" stroke="#00b4d8" stroke-width="2"/>
+      <line x1="25" y1="65" x2="50" y2="67" stroke="#7b2fbe" stroke-width="1.5"/>
+      <line x1="75" y1="65" x2="50" y2="67" stroke="#7b2fbe" stroke-width="1.5"/>
+    </svg>
+    <div>
+      <div class="gate-logo-text">VAULT NEURON</div>
+      <div class="gate-logo-sub">Team Diagnostic</div>
+    </div>
+  </div>
+
+  <div class="gate-card">
+    <div class="anon-badge">🔒 100% ANONYMOUS</div>
+    <div class="gate-title">Team Diagnostic</div>
+    <div class="gate-sub">Your company is investing in understanding how operations really work — from the people who do the work every day. Your name will never be attached to your answers.</div>
+    <input type="text" id="tokenInput" placeholder="Team access code" style="text-align:center;font-family:'Syne',sans-serif;font-size:1rem;letter-spacing:0.08em;margin-bottom:1rem;" autocomplete="off" spellcheck="false">
+    <button class="btn-primary" onclick="validateToken()">BEGIN SURVEY</button>
+    <div class="gate-error" id="gateError"></div>
+    <div style="margin-top:1.5rem;font-size:0.8rem;color:var(--muted);">
+      Questions? <a href="mailto:connect@vaultneuron.com" style="color:var(--teal);text-decoration:none;">connect@vaultneuron.com</a>
+    </div>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="app">
+
+  <div class="topbar">
+    <div class="topbar-logo">
+      <svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M50 5 L90 25 L90 75 L50 95 L10 75 L10 25 Z" stroke="#7b2fbe" stroke-width="3" fill="none"/>
+        <circle cx="50" cy="30" r="8" fill="#00b4d8"/>
+        <circle cx="25" cy="65" r="6" fill="#7b2fbe"/>
+        <circle cx="75" cy="65" r="6" fill="#7b2fbe"/>
+        <circle cx="50" cy="72" r="5" fill="#7b2fbe"/>
+        <line x1="50" y1="38" x2="25" y2="59" stroke="#00b4d8" stroke-width="2"/>
+        <line x1="50" y1="38" x2="75" y2="59" stroke="#00b4d8" stroke-width="2"/>
+        <line x1="25" y1="65" x2="50" y2="67" stroke="#7b2fbe" stroke-width="1.5"/>
+        <line x1="75" y1="65" x2="50" y2="67" stroke="#7b2fbe" stroke-width="1.5"/>
+      </svg>
+      <div>
+        <div class="topbar-name">VAULT NEURON</div>
+        <div class="topbar-label">Team Diagnostic</div>
+      </div>
+    </div>
+    <div class="anon-pill">🔒 ANONYMOUS</div>
+  </div>
+
+  <div class="progress-wrap">
+    <div class="progress-meta">
+      <div class="progress-label" id="sectionLabel">About Your Role</div>
+      <div class="progress-count" id="progressPct">0%</div>
+    </div>
+    <div class="progress-bar"><div class="progress-fill" id="progressFill" style="width:0%"></div></div>
+  </div>
+
+  <!-- ── SECTION 0: INTRO & ROLE ── -->
+  <div class="section active" id="sec-0">
+    <div class="section-header">
+      <div class="section-eyebrow">Getting Started</div>
+      <div class="section-title">About Your Role</div>
+      <div class="section-desc">These questions help us understand context — your answers are never linked to your name or identity.</div>
+    </div>
+
+    <div class="anon-reminder">
+      🔒 This survey is completely anonymous. Leadership will only see patterns across the whole team — never individual responses.
+    </div>
+
+    <div class="question-block">
+      <div class="q-label">How long have you worked here? <span class="req">*</span></div>
+      <div class="options">
+        <label class="option-label"><input type="radio" name="qa_1" value="under6mo"> Less than 6 months</label>
+        <label class="option-label"><input type="radio" name="qa_1" value="6mo-2yr"> 6 months – 2 years</label>
+        <label class="option-label"><input type="radio" name="qa_1" value="2-5yr"> 2–5 years</label>
+        <label class="option-label"><input type="radio" name="qa_1" value="5plus"> 5+ years</label>
+      </div>
+    </div>
+
+    <div class="question-block">
+      <div class="q-label">Which area best describes your primary role? <span class="req">*</span></div>
+      <div class="options">
+        <label class="option-label"><input type="radio" name="qa_2" value="operations"> Operations</label>
+        <label class="option-label"><input type="radio" name="qa_2" value="customer_service"> Customer Service</label>
+        <label class="option-label"><input type="radio" name="qa_2" value="sales"> Sales</label>
+        <label class="option-label"><input type="radio" name="qa_2" value="finance_admin"> Finance / Admin</label>
+        <label class="option-label"><input type="radio" name="qa_2" value="production"> Production / Fulfillment</label>
+        <label class="option-label"><input type="radio" name="qa_2" value="management"> Management</label>
+        <label class="option-label"><input type="radio" name="qa_2" value="other"> Other</label>
+      </div>
+    </div>
+
+    <div class="nav-bar">
+      <div></div>
+      <button class="btn-next" onclick="nextSection(0)">NEXT →</button>
+    </div>
+  </div>
+
+  <!-- ── SECTION 1: WORKFLOW ── -->
+  <div class="section" id="sec-1">
+    <div class="section-header">
+      <div class="section-eyebrow">Section 1 of 4</div>
+      <div class="section-title">Day-to-Day Workflow</div>
+      <div class="section-desc">How work actually moves — from your perspective on the ground.</div>
+    </div>
+
+    <div class="anon-reminder">🔒 Anonymous — your name is never attached to these answers.</div>
+
+    <div class="question-block">
+      <div class="q-label">How clear are your daily priorities and responsibilities? <span class="req">*</span></div>
+      <div class="options">
+        <label class="option-label"><input type="radio" name="qb_1" value="very_clear" data-score="10"> Very clear — I always know what I should be working on</label>
+        <label class="option-label"><input type="radio" name="qb_1" value="mostly" data-score="7"> Mostly clear — occasional confusion</label>
+        <label class="option-label"><input type="radio" name="qb_1" value="often_unclear" data-score="3"> Often unclear — I frequently have to ask</label>
+        <label class="option-label"><input type="radio" name="qb_1" value="unclear" data-score="0"> Unclear — I often don't know what's most important</label>
+      </div>
+    </div>
+
+    <div class="question-block">
+      <div class="q-label">How often do you have to re-enter the same information in more than one place? <span class="req">*</span></div>
+      <div class="options">
+        <label class="option-label"><input type="radio" name="qb_2" value="never" data-score="10"> Never</label>
+        <label class="option-label"><input type="radio" name="qb_2" value="sometimes" data-score="6"> Sometimes</label>
+        <label class="option-label"><input type="radio" name="qb_2" value="often" data-score="2"> Often</label>
+        <label class="option-label"><input type="radio" name="qb_2" value="constantly" data-score="0"> Constantly — it's a significant part of my day</label>
+      </div>
+    </div>
+
+    <div class="question-block">
+      <div class="q-label">When something goes wrong in a process, what usually happens? <span class="req">*</span></div>
+      <div class="options">
+        <label class="option-label"><input type="radio" name="qb_3" value="clear_fix" data-score="10"> We have a clear way to flag and fix it</label>
+        <label class="option-label"><input type="radio" name="qb_3" value="informal" data-score="5"> It gets handled informally and forgotten</label>
+        <label class="option-label"><input type="radio" name="qb_3" value="repeats" data-score="0"> It tends to happen again — nothing changes</label>
+        <label class="option-label"><input type="radio" name="qb_3" value="dont_know" data-score="3"> I'm not sure — I just do my part and move on</label>
+      </div>
+    </div>
+
+    <div class="question-block">
+      <div class="q-label">What is one task you do regularly that feels like a waste of your time — or that you think could be done faster or better? <span class="req">*</span></div>
+      <textarea id="qb_4" placeholder="Be honest — this is exactly the kind of insight that drives real improvements..."></textarea>
+    </div>
+
+    <div class="question-block">
+      <div class="q-label">How often are you waiting on someone else before you can complete your work? <span class="req">*</span></div>
+      <div class="options">
+        <label class="option-label"><input type="radio" name="qb_5" value="rarely" data-score="10"> Rarely</label>
+        <label class="option-label"><input type="radio" name="qb_5" value="sometimes" data-score="6"> Sometimes</label>
+        <label class="option-label"><input type="radio" name="qb_5" value="often" data-score="2"> Often</label>
+        <label class="option-label"><input type="radio" name="qb_5" value="constantly" data-score="0"> Constantly — it's a major frustration</label>
+      </div>
+    </div>
+
+    <div class="question-block">
+      <div class="q-label">How well do different departments or team members hand off work to each other? <span class="req">*</span></div>
+      <div class="options">
+        <label class="option-label"><input type="radio" name="qb_6" value="smooth" data-score="10"> Very smoothly — clear handoffs</label>
+        <label class="option-label"><input type="radio" name="qb_6" value="usually_ok" data-score="6"> Usually okay — occasional miscommunication</label>
+        <label class="option-label"><input type="radio" name="qb_6" value="messy" data-score="2"> Often messy — things fall through the cracks</label>
+        <label class="option-label"><input type="radio" name="qb_6" value="poorly" data-score="0"> Poorly — this causes regular problems</label>
+      </div>
+    </div>
+
+    <div class="nav-bar">
+      <button class="btn-nav" onclick="prevSection(1)">← BACK</button>
+      <button class="btn-next" onclick="nextSection(1)">NEXT →</button>
+    </div>
+  </div>
+
+  <!-- ── SECTION 2: INFORMATION & TOOLS ── -->
+  <div class="section" id="sec-2">
+    <div class="section-header">
+      <div class="section-eyebrow">Section 2 of 4</div>
+      <div class="section-title">Information & Tools</div>
+      <div class="section-desc">Whether you can find what you need and whether the tools support your work.</div>
+    </div>
+
+    <div class="anon-reminder">🔒 Anonymous — your name is never attached to these answers.</div>
+
+    <div class="question-block">
+      <div class="q-label">How easy is it to find the information you need to do your job? <span class="req">*</span></div>
+      <div class="options">
+        <label class="option-label"><input type="radio" name="qc_1" value="very_easy" data-score="10"> Very easy — everything is organized and accessible</label>
+        <label class="option-label"><input type="radio" name="qc_1" value="manageable" data-score="6"> Usually manageable — takes some digging</label>
+        <label class="option-label"><input type="radio" name="qc_1" value="often_diff" data-score="2"> Often difficult — I spend significant time searching</label>
+        <label class="option-label"><input type="radio" name="qc_1" value="very_diff" data-score="0"> Very difficult — I frequently can't find what I need</label>
+      </div>
+    </div>
+
+    <div class="question-block">
+      <div class="q-label">How would you rate the tools and systems you use to do your job? <span class="req">*</span></div>
+      <div class="options">
+        <label class="option-label"><input type="radio" name="qc_2" value="excellent" data-score="10"> Excellent — they make my job easier</label>
+        <label class="option-label"><input type="radio" name="qc_2" value="adequate" data-score="6"> Adequate — they work but could be better</label>
+        <label class="option-label"><input type="radio" name="qc_2" value="frustrating" data-score="2"> Frustrating — they slow me down</label>
+        <label class="option-label"><input type="radio" name="qc_2" value="poor" data-score="0"> Very poor — they create significant problems</label>
+      </div>
+    </div>
+
+    <div class="question-block">
+      <div class="q-label">Is there a tool, system, or piece of information that would make your job significantly easier if you had it? <span class="req">*</span></div>
+      <textarea id="qc_3" placeholder="e.g., A way to quickly look up vendor pricing without checking 4 different websites every time..."></textarea>
+    </div>
+
+    <div class="question-block">
+      <div class="q-label">When you're unsure how to handle something at work, where do you go for answers? <span class="req">*</span></div>
+      <div class="options">
+        <label class="option-label"><input type="radio" name="qc_4" value="documented" data-score="10"> A documented process or guide</label>
+        <label class="option-label"><input type="radio" name="qc_4" value="coworker" data-score="5"> Ask a specific coworker who knows</label>
+        <label class="option-label"><input type="radio" name="qc_4" value="manager" data-score="5"> Ask my manager</label>
+        <label class="option-label"><input type="radio" name="qc_4" value="figure_out" data-score="2"> Figure it out myself</label>
+        <label class="option-label"><input type="radio" name="qc_4" value="depends" data-score="3"> It depends — no consistent source</label>
+      </div>
+    </div>
+
+    <div class="question-block">
+      <div class="q-label">How confident are you that important knowledge doesn't get lost when someone leaves or is out? <span class="req">*</span></div>
+      <div class="options">
+        <label class="option-label"><input type="radio" name="qc_5" value="very" data-score="10"> Very confident — things are well documented</label>
+        <label class="option-label"><input type="radio" name="qc_5" value="somewhat" data-score="6"> Somewhat — most things are captured</label>
+        <label class="option-label"><input type="radio" name="qc_5" value="not_very" data-score="2"> Not very — a lot lives in people's heads</label>
+        <label class="option-label"><input type="radio" name="qc_5" value="not_at_all" data-score="0"> Not confident — we've lost important knowledge before</label>
+      </div>
+    </div>
+
+    <div class="nav-bar">
+      <button class="btn-nav" onclick="prevSection(2)">← BACK</button>
+      <button class="btn-next" onclick="nextSection(2)">NEXT →</button>
+    </div>
+  </div>
+
+  <!-- ── SECTION 3: CUSTOMER & COMMUNICATION ── -->
+  <div class="section" id="sec-3">
+    <div class="section-header">
+      <div class="section-eyebrow">Section 3 of 4</div>
+      <div class="section-title">Customer & Communication</div>
+      <div class="section-desc">How internal communication and information access affects the customer experience.</div>
+    </div>
+
+    <div class="anon-reminder">🔒 Anonymous — your name is never attached to these answers.</div>
+
+    <div class="question-block">
+      <div class="q-label">How confident are you in the accuracy of information you give to customers? <span class="req">*</span></div>
+      <div class="options">
+        <label class="option-label"><input type="radio" name="qd_1" value="very" data-score="10"> Very confident — I always have what I need</label>
+        <label class="option-label"><input type="radio" name="qd_1" value="mostly" data-score="6"> Mostly confident — occasional gaps</label>
+        <label class="option-label"><input type="radio" name="qd_1" value="sometimes" data-score="2"> Sometimes uncertain — I have to estimate or check back</label>
+        <label class="option-label"><input type="radio" name="qd_1" value="often" data-score="0"> Often uncertain — this is a real challenge</label>
+      </div>
+    </div>
+
+    <div class="question-block">
+      <div class="q-label">How quickly can you typically resolve a customer issue or question? <span class="req">*</span></div>
+      <div class="options">
+        <label class="option-label"><input type="radio" name="qd_2" value="immediate" data-score="10"> Immediately — I have everything I need</label>
+        <label class="option-label"><input type="radio" name="qd_2" value="same_day" data-score="7"> Same day — after checking</label>
+        <label class="option-label"><input type="radio" name="qd_2" value="1-2_days" data-score="3"> 1–2 days — requires coordination</label>
+        <label class="option-label"><input type="radio" name="qd_2" value="longer" data-score="0"> Longer — this is a pain point</label>
+      </div>
+    </div>
+
+    <div class="question-block">
+      <div class="q-label">What is the most common complaint or frustration you hear from customers? <span class="req">*</span></div>
+      <textarea id="qd_3" placeholder="e.g., They often call back asking why their quote changed from what they were told originally..."></textarea>
+    </div>
+
+    <div class="question-block">
+      <div class="q-label">How well does internal communication support delivering a good customer experience? <span class="req">*</span></div>
+      <div class="options">
+        <label class="option-label"><input type="radio" name="qd_4" value="very_well" data-score="10"> Very well — we're well coordinated</label>
+        <label class="option-label"><input type="radio" name="qd_4" value="mostly" data-score="6"> Mostly well — occasional breakdowns</label>
+        <label class="option-label"><input type="radio" name="qd_4" value="poorly" data-score="2"> Poorly — miscommunication regularly affects customers</label>
+        <label class="option-label"><input type="radio" name="qd_4" value="very_poorly" data-score="0"> Very poorly — this is a significant problem</label>
+      </div>
+    </div>
+
+    <div class="nav-bar">
+      <button class="btn-nav" onclick="prevSection(3)">← BACK</button>
+      <button class="btn-next" onclick="nextSection(3)">NEXT: FINAL QUESTIONS →</button>
+    </div>
+  </div>
+
+  <!-- ── SECTION 4: OPEN FEEDBACK ── -->
+  <div class="section" id="sec-4">
+    <div class="section-header">
+      <div class="section-eyebrow">Section 4 of 4</div>
+      <div class="section-title">Your Voice</div>
+      <div class="section-desc">The most valuable part of this survey. No right or wrong answers — just your honest experience.</div>
+    </div>
+
+    <div class="anon-reminder">🔒 These responses are completely anonymous. Your identity is never attached to what you write here.</div>
+
+    <div class="question-block">
+      <div class="q-label">If you could change one thing about how this company operates, what would it be? <span class="req">*</span></div>
+      <div class="q-hint">This is the single most important question in this survey. The more specific and honest you are, the more useful it becomes.</div>
+      <textarea id="qe_1" style="min-height:120px;" placeholder="Don't hold back — this is exactly what leadership needs to hear, and your name will never appear anywhere near this answer..."></textarea>
+    </div>
+
+    <div class="question-block">
+      <div class="q-label">Is there anything else you think leadership should know about how operations really work day to day?</div>
+      <div class="q-hint">Optional — but often the most valuable responses come here.</div>
+      <textarea id="qe_2" style="min-height:100px;" placeholder="Anything else on your mind — patterns you see, problems that keep coming back, things that work really well that could be expanded..."></textarea>
+    </div>
+
+    <div class="nav-bar">
+      <button class="btn-nav" onclick="prevSection(4)">← BACK</button>
+      <button class="btn-next" id="submitBtn" onclick="submitDiagnostic()" style="padding:0.85rem 2.5rem;">SUBMIT ANONYMOUSLY ✓</button>
+    </div>
+  </div>
+
+  <!-- ── COMPLETION ── -->
+  <div class="section" id="sec-complete">
+    <div class="completion">
+      <div class="completion-icon">✓</div>
+      <div class="completion-title">Thank You</div>
+      <div class="completion-sub">Your anonymous response has been submitted. Your input will help shape a better operational foundation for your whole team.<br><br>This survey was facilitated by Vault Neuron.<br><a href="mailto:connect@vaultneuron.com" style="color:var(--teal);text-decoration:none;">connect@vaultneuron.com</a></div>
+    </div>
+  </div>
+
+</div><!-- /app -->
+
+<script>
+const WEBHOOK_URL = 'YOUR_APPS_SCRIPT_WEBHOOK_URL_HERE';
+
+let currentSection = 0;
+let totalSections  = 4;
+let teamToken      = '';
+let diagId         = '';
+let company        = '';
+
+// Auto-load token from URL param
+window.addEventListener('load', () => {
+  const params = new URLSearchParams(window.location.search);
+  const t = params.get('token');
+  if (t) {
+    document.getElementById('tokenInput').value = t;
+    validateToken();
+  }
+});
+
+async function validateToken() {
+  const token = document.getElementById('tokenInput').value.trim().toUpperCase();
+  const errEl = document.getElementById('gateError');
+
+  if (!token) { errEl.textContent = 'Please enter the team access code.'; return; }
+
+  errEl.textContent = 'Validating...';
+  errEl.style.color = 'var(--teal)';
+
+  try {
+    const res  = await fetch(`${WEBHOOK_URL}?action=validateToken&token=${encodeURIComponent(token)}&type=team`);
+    const data = await res.json();
+
+    if (data.valid) {
+      teamToken = token;
+      diagId    = data.diagId;
+      company   = data.company;
+      document.getElementById('gate').classList.add('hidden');
+      document.getElementById('app').style.display = 'block';
+      updateProgress();
+    } else {
+      errEl.style.color = 'var(--red)';
+      errEl.textContent = data.message || 'Invalid access code. Check with your manager or contact connect@vaultneuron.com';
+    }
+  } catch(e) {
+    errEl.style.color = 'var(--red)';
+    errEl.textContent = 'Connection error. Please try again.';
+  }
+}
+
+document.getElementById('tokenInput').addEventListener('keydown', e => {
+  if (e.key === 'Enter') validateToken();
+});
+
+function nextSection(from) {
+  if (!validateSection(from)) return;
+  document.getElementById(`sec-${from}`).classList.remove('active');
+  currentSection = from + 1;
+  document.getElementById(`sec-${currentSection}`).classList.add('active');
+  updateProgress();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function prevSection(from) {
+  document.getElementById(`sec-${from}`).classList.remove('active');
+  currentSection = from - 1;
+  document.getElementById(`sec-${currentSection}`).classList.add('active');
+  updateProgress();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function updateProgress() {
+  const pct = Math.round((currentSection / totalSections) * 100);
+  document.getElementById('progressFill').style.width = `${pct}%`;
+  document.getElementById('progressPct').textContent  = `${pct}%`;
+  const labels = ['About Your Role','Day-to-Day Workflow','Information & Tools','Customer & Communication','Your Voice'];
+  document.getElementById('sectionLabel').textContent = labels[currentSection] || 'Complete';
+}
+
+function validateSection(secNum) {
+  let valid = true;
+  const sec = document.getElementById(`sec-${secNum}`);
+  sec.querySelectorAll('.question-block').forEach(b => b.classList.remove('required-error'));
+
+  const radioGroups = {};
+  sec.querySelectorAll('input[type="radio"]').forEach(r => {
+    if (!radioGroups[r.name]) radioGroups[r.name] = false;
+    if (r.checked) radioGroups[r.name] = true;
+  });
+
+  Object.keys(radioGroups).forEach(name => {
+    if (!radioGroups[name]) {
+      const block = sec.querySelector(`input[name="${name}"]`)?.closest('.question-block');
+      if (block) { block.classList.add('required-error'); valid = false; }
+    }
+  });
+
+  sec.querySelectorAll('textarea[id]').forEach(el => {
+    const block = el.closest('.question-block');
+    const label = block?.querySelector('.q-label');
+    if (label?.querySelector('.req') && !el.value.trim()) {
+      block.classList.add('required-error');
+      valid = false;
+    }
+  });
+
+  if (!valid) {
+    sec.querySelector('.required-error')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }
+  return valid;
+}
+
+document.addEventListener('change', e => {
+  if (e.target.type === 'radio') {
+    document.querySelectorAll(`input[name="${e.target.name}"]`).forEach(r => {
+      r.closest('.option-label')?.classList.toggle('selected', r.checked);
+    });
+  }
+});
+
+function collectAnswers() {
+  const ans = {};
+
+  ['qb_4','qc_3','qd_3','qe_1','qe_2'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) ans[id] = el.value.trim();
+  });
+
+  document.querySelectorAll('input[type="radio"]:checked').forEach(r => {
+    ans[r.name] = r.value;
+  });
+
+  // Score workflow pillar (B)
+  const wfQs = ['qb_1','qb_2','qb_3','qb_5','qb_6'];
+  let wfScore = 0;
+  wfQs.forEach(q => {
+    const sel = document.querySelector(`input[name="${q}"]:checked`);
+    wfScore += parseInt(sel?.getAttribute('data-score') || '0');
+  });
+  ans.workflow_score = wfScore;
+  ans.workflow_pct   = Math.round((wfScore / (wfQs.length * 10)) * 100);
+
+  // Score info/tools pillar (C)
+  const itQs = ['qc_1','qc_2','qc_4','qc_5'];
+  let itScore = 0;
+  itQs.forEach(q => {
+    const sel = document.querySelector(`input[name="${q}"]:checked`);
+    itScore += parseInt(sel?.getAttribute('data-score') || '0');
+  });
+  ans.info_tools_score = itScore;
+  ans.info_tools_pct   = Math.round((itScore / (itQs.length * 10)) * 100);
+
+  // Score customer pillar (D)
+  const cxQs = ['qd_1','qd_2','qd_4'];
+  let cxScore = 0;
+  cxQs.forEach(q => {
+    const sel = document.querySelector(`input[name="${q}"]:checked`);
+    cxScore += parseInt(sel?.getAttribute('data-score') || '0');
+  });
+  ans.customer_score = cxScore;
+  ans.customer_pct   = Math.round((cxScore / (cxQs.length * 10)) * 100);
+
+  ans.diagId    = diagId;
+  ans.company   = company;
+  ans.token     = teamToken;
+  ans.formType  = 'team';
+  ans.timestamp = new Date().toISOString();
+
+  return ans;
+}
+
+async function submitDiagnostic() {
+  const btn = document.getElementById('submitBtn');
+  btn.disabled = true;
+  btn.textContent = 'SUBMITTING...';
+  document.getElementById('submittingOverlay').classList.add('show');
+
+  const payload = collectAnswers();
+
+  try {
+    await fetch(WEBHOOK_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'submitTeamDiagnostic', data: payload })
+    });
+
+    document.getElementById('sec-4').classList.remove('active');
+    document.getElementById('sec-complete').classList.add('active');
+    document.getElementById('submittingOverlay').classList.remove('show');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+
+  } catch(e) {
+    document.getElementById('submittingOverlay').classList.remove('show');
+    btn.disabled = false;
+    btn.textContent = 'SUBMIT ANONYMOUSLY ✓';
+    alert('Submission error. Please try again or contact connect@vaultneuron.com');
+  }
+}
+</script>
+</body>
+</html>

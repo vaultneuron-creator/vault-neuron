@@ -1,0 +1,1534 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Vault Neuron — Leadership Diagnostic</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #080810;
+    --bg2: #0d0d1a;
+    --bg3: #121220;
+    --card: #14142a;
+    --border: #1e1e3a;
+    --teal: #00b4d8;
+    --teal-dim: rgba(0,180,216,0.12);
+    --teal-glow: rgba(0,180,216,0.25);
+    --purple: #7b2fbe;
+    --purple-dim: rgba(123,47,190,0.15);
+    --amber: #ffb347;
+    --amber-dim: rgba(255,179,71,0.12);
+    --red: #ff4444;
+    --white: #f0f0fa;
+    --muted: #6666a0;
+    --mid: #9999cc;
+    --font-display: 'Syne', sans-serif;
+    --font-body: 'DM Sans', sans-serif;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--white);
+    font-family: var(--font-body);
+    font-size: 15px;
+    line-height: 1.6;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* Grid background */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(0,180,216,0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0,180,216,0.03) 1px, transparent 1px);
+    background-size: 60px 60px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* ── GATE SCREEN ── */
+  #gate {
+    position: fixed;
+    inset: 0;
+    background: var(--bg);
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    gap: 2rem;
+    padding: 2rem;
+  }
+
+  #gate.hidden { display: none; }
+
+  .gate-logo {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 1rem;
+  }
+
+  .gate-logo svg { width: 44px; height: 44px; }
+
+  .gate-logo-text {
+    font-family: var(--font-display);
+    font-size: 1.1rem;
+    font-weight: 700;
+    letter-spacing: 0.15em;
+    color: var(--white);
+  }
+
+  .gate-logo-sub {
+    font-size: 0.7rem;
+    color: var(--teal);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+
+  .gate-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 2.5rem;
+    max-width: 480px;
+    width: 100%;
+    text-align: center;
+  }
+
+  .gate-title {
+    font-family: var(--font-display);
+    font-size: 1.4rem;
+    font-weight: 700;
+    color: var(--white);
+    margin-bottom: 0.5rem;
+  }
+
+  .gate-sub {
+    color: var(--muted);
+    font-size: 0.9rem;
+    margin-bottom: 2rem;
+  }
+
+  .gate-error {
+    color: var(--red);
+    font-size: 0.85rem;
+    margin-top: 0.75rem;
+    min-height: 20px;
+  }
+
+  /* ── INPUTS ── */
+  input[type="text"], input[type="email"], input[type="url"], textarea, select {
+    width: 100%;
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 0.75rem 1rem;
+    color: var(--white);
+    font-family: var(--font-body);
+    font-size: 0.95rem;
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+  }
+
+  input:focus, textarea:focus, select:focus {
+    border-color: var(--teal);
+    box-shadow: 0 0 0 3px var(--teal-dim);
+  }
+
+  textarea { resize: vertical; min-height: 100px; }
+  select option { background: var(--bg2); }
+
+  /* ── BUTTONS ── */
+  .btn-primary {
+    background: linear-gradient(135deg, var(--teal), #0090b8);
+    color: #000;
+    border: none;
+    border-radius: 8px;
+    padding: 0.85rem 2rem;
+    font-family: var(--font-display);
+    font-size: 0.9rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: opacity 0.2s, transform 0.1s;
+    width: 100%;
+  }
+
+  .btn-primary:hover { opacity: 0.9; transform: translateY(-1px); }
+  .btn-primary:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+
+  .btn-nav {
+    background: transparent;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 0.7rem 1.5rem;
+    color: var(--mid);
+    font-family: var(--font-body);
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .btn-nav:hover { border-color: var(--teal); color: var(--teal); }
+
+  .btn-next {
+    background: linear-gradient(135deg, var(--teal), #0090b8);
+    color: #000;
+    border: none;
+    border-radius: 8px;
+    padding: 0.7rem 2rem;
+    font-family: var(--font-display);
+    font-size: 0.85rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .btn-next:hover { opacity: 0.9; transform: translateY(-1px); }
+
+  /* ── LAYOUT ── */
+  #app {
+    position: relative;
+    z-index: 1;
+    max-width: 780px;
+    margin: 0 auto;
+    padding: 2rem 1.5rem 6rem;
+  }
+
+  /* ── TOP BAR ── */
+  .topbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1.5rem 0 2rem;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 2.5rem;
+  }
+
+  .topbar-logo {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .topbar-logo svg { width: 32px; height: 32px; }
+
+  .topbar-name {
+    font-family: var(--font-display);
+    font-size: 0.85rem;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    color: var(--white);
+  }
+
+  .topbar-label {
+    font-size: 0.72rem;
+    color: var(--teal);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  .topbar-badge {
+    background: var(--purple-dim);
+    border: 1px solid var(--purple);
+    border-radius: 20px;
+    padding: 0.3rem 0.8rem;
+    font-size: 0.75rem;
+    color: var(--purple);
+    font-family: var(--font-display);
+    font-weight: 600;
+    letter-spacing: 0.06em;
+  }
+
+  /* ── PROGRESS ── */
+  .progress-wrap {
+    margin-bottom: 2.5rem;
+  }
+
+  .progress-meta {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.6rem;
+  }
+
+  .progress-label {
+    font-family: var(--font-display);
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: var(--teal);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+
+  .progress-count {
+    font-size: 0.8rem;
+    color: var(--muted);
+  }
+
+  .progress-bar {
+    height: 3px;
+    background: var(--border);
+    border-radius: 2px;
+    overflow: hidden;
+  }
+
+  .progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--teal), var(--purple));
+    border-radius: 2px;
+    transition: width 0.4s ease;
+  }
+
+  /* ── SECTION ── */
+  .section { display: none; animation: fadeIn 0.3s ease; }
+  .section.active { display: block; }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .section-header {
+    margin-bottom: 2rem;
+  }
+
+  .section-eyebrow {
+    font-size: 0.72rem;
+    font-weight: 600;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--teal);
+    font-family: var(--font-display);
+    margin-bottom: 0.4rem;
+  }
+
+  .section-title {
+    font-family: var(--font-display);
+    font-size: 1.6rem;
+    font-weight: 800;
+    color: var(--white);
+    line-height: 1.2;
+    margin-bottom: 0.6rem;
+  }
+
+  .section-desc {
+    color: var(--mid);
+    font-size: 0.9rem;
+    line-height: 1.6;
+  }
+
+  /* ── INTRO CARD ── */
+  .intro-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--teal);
+    border-radius: 12px;
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+  }
+
+  .intro-card-title {
+    font-family: var(--font-display);
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: var(--teal);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    margin-bottom: 1rem;
+  }
+
+  .score-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.75rem;
+  }
+
+  .score-item {
+    background: var(--bg2);
+    border-radius: 8px;
+    padding: 0.75rem;
+  }
+
+  .score-item-label { font-size: 0.72rem; color: var(--muted); margin-bottom: 0.2rem; text-transform: uppercase; letter-spacing: 0.06em; }
+  .score-item-val { font-family: var(--font-display); font-size: 1.1rem; font-weight: 700; color: var(--teal); }
+
+  /* ── QUESTIONS ── */
+  .question-block {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 1.5rem;
+    margin-bottom: 1rem;
+    transition: border-color 0.2s;
+  }
+
+  .question-block:focus-within { border-color: rgba(0,180,216,0.3); }
+
+  .question-block.required-error { border-color: var(--red); }
+
+  .q-label {
+    font-size: 0.95rem;
+    font-weight: 500;
+    color: var(--white);
+    margin-bottom: 1rem;
+    line-height: 1.5;
+  }
+
+  .q-label .req { color: var(--teal); margin-left: 3px; }
+
+  .q-hint {
+    font-size: 0.8rem;
+    color: var(--muted);
+    margin-bottom: 0.75rem;
+    font-style: italic;
+  }
+
+  /* Radio options */
+  .options { display: flex; flex-direction: column; gap: 0.5rem; }
+
+  .option-label {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.75rem;
+    padding: 0.65rem 0.85rem;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.15s;
+    line-height: 1.4;
+  }
+
+  .option-label:hover {
+    border-color: var(--teal);
+    background: var(--teal-dim);
+  }
+
+  .option-label input[type="radio"],
+  .option-label input[type="checkbox"] {
+    width: auto;
+    background: none;
+    border: none;
+    padding: 0;
+    margin-top: 2px;
+    accent-color: var(--teal);
+    flex-shrink: 0;
+  }
+
+  .option-label input:focus { box-shadow: none; }
+
+  .option-label.selected {
+    border-color: var(--teal);
+    background: var(--teal-dim);
+    color: var(--white);
+  }
+
+  /* ── NAV ── */
+  .nav-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 2rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--border);
+  }
+
+  /* ── COMPLETION ── */
+  .completion {
+    text-align: center;
+    padding: 3rem 1rem;
+  }
+
+  .completion-icon {
+    width: 72px;
+    height: 72px;
+    background: var(--teal-dim);
+    border: 2px solid var(--teal);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 1.5rem;
+    font-size: 2rem;
+  }
+
+  .completion-title {
+    font-family: var(--font-display);
+    font-size: 2rem;
+    font-weight: 800;
+    color: var(--white);
+    margin-bottom: 0.75rem;
+  }
+
+  .completion-sub {
+    color: var(--mid);
+    font-size: 1rem;
+    max-width: 480px;
+    margin: 0 auto 2rem;
+    line-height: 1.7;
+  }
+
+  .completion-id {
+    display: inline-block;
+    background: var(--purple-dim);
+    border: 1px solid var(--purple);
+    border-radius: 8px;
+    padding: 0.6rem 1.2rem;
+    font-family: var(--font-display);
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: var(--purple);
+    letter-spacing: 0.1em;
+    margin-bottom: 1.5rem;
+  }
+
+  /* ── LOADING ── */
+  .spinner {
+    display: inline-block;
+    width: 18px;
+    height: 18px;
+    border: 2px solid rgba(0,0,0,0.2);
+    border-top-color: #000;
+    border-radius: 50%;
+    animation: spin 0.6s linear infinite;
+    vertical-align: middle;
+    margin-right: 6px;
+  }
+
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .submitting-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(8,8,16,0.85);
+    z-index: 200;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  .submitting-overlay.show { display: flex; }
+  .submitting-text { color: var(--teal); font-family: var(--font-display); font-size: 1rem; font-weight: 600; letter-spacing: 0.1em; }
+
+  /* ── RESPONSIVE ── */
+  @media (max-width: 600px) {
+    .score-grid { grid-template-columns: 1fr; }
+    .section-title { font-size: 1.3rem; }
+  }
+</style>
+</head>
+<body>
+
+<!-- SUBMITTING OVERLAY -->
+<div class="submitting-overlay" id="submittingOverlay">
+  <div style="width:48px;height:48px;border:3px solid var(--border);border-top-color:var(--teal);border-radius:50%;animation:spin 0.7s linear infinite;"></div>
+  <div class="submitting-text">SUBMITTING YOUR DIAGNOSTIC...</div>
+</div>
+
+<!-- GATE SCREEN -->
+<div id="gate">
+  <div class="gate-logo">
+    <svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M50 5 L90 25 L90 75 L50 95 L10 75 L10 25 Z" stroke="#7b2fbe" stroke-width="3" fill="none"/>
+      <circle cx="50" cy="30" r="8" fill="#00b4d8"/>
+      <circle cx="25" cy="65" r="6" fill="#7b2fbe"/>
+      <circle cx="75" cy="65" r="6" fill="#7b2fbe"/>
+      <circle cx="50" cy="72" r="5" fill="#7b2fbe"/>
+      <line x1="50" y1="38" x2="25" y2="59" stroke="#00b4d8" stroke-width="2"/>
+      <line x1="50" y1="38" x2="75" y2="59" stroke="#00b4d8" stroke-width="2"/>
+      <line x1="25" y1="65" x2="50" y2="67" stroke="#7b2fbe" stroke-width="1.5"/>
+      <line x1="75" y1="65" x2="50" y2="67" stroke="#7b2fbe" stroke-width="1.5"/>
+    </svg>
+    <div>
+      <div class="gate-logo-text">VAULT NEURON</div>
+      <div class="gate-logo-sub">Operational Intelligence</div>
+    </div>
+  </div>
+
+  <div class="gate-card">
+    <div class="gate-title">Leadership Diagnostic</div>
+    <div class="gate-sub">Enter your unique diagnostic token to begin. This was included in your Blueprint confirmation email.</div>
+    <input type="text" id="tokenInput" placeholder="VN-26-XXXXXX-L-XXXX" style="text-align:center;font-family:'Syne',sans-serif;font-size:1.1rem;letter-spacing:0.1em;margin-bottom:1rem;" autocomplete="off" spellcheck="false">
+    <button class="btn-primary" onclick="validateToken()">VALIDATE & BEGIN</button>
+    <div class="gate-error" id="gateError"></div>
+    <div style="margin-top:1.5rem;font-size:0.8rem;color:var(--muted);">
+      Questions? <a href="mailto:connect@vaultneuron.com" style="color:var(--teal);text-decoration:none;">connect@vaultneuron.com</a>
+    </div>
+  </div>
+</div>
+
+<!-- MAIN APP -->
+<div id="app" style="display:none;">
+
+  <div class="topbar">
+    <div class="topbar-logo">
+      <svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M50 5 L90 25 L90 75 L50 95 L10 75 L10 25 Z" stroke="#7b2fbe" stroke-width="3" fill="none"/>
+        <circle cx="50" cy="30" r="8" fill="#00b4d8"/>
+        <circle cx="25" cy="65" r="6" fill="#7b2fbe"/>
+        <circle cx="75" cy="65" r="6" fill="#7b2fbe"/>
+        <circle cx="50" cy="72" r="5" fill="#7b2fbe"/>
+        <line x1="50" y1="38" x2="25" y2="59" stroke="#00b4d8" stroke-width="2"/>
+        <line x1="50" y1="38" x2="75" y2="59" stroke="#00b4d8" stroke-width="2"/>
+        <line x1="25" y1="65" x2="50" y2="67" stroke="#7b2fbe" stroke-width="1.5"/>
+        <line x1="75" y1="65" x2="50" y2="67" stroke="#7b2fbe" stroke-width="1.5"/>
+      </svg>
+      <div>
+        <div class="topbar-name">VAULT NEURON</div>
+        <div class="topbar-label">Leadership Diagnostic</div>
+      </div>
+    </div>
+    <div class="topbar-badge" id="companyBadge">LOADING...</div>
+  </div>
+
+  <div class="progress-wrap">
+    <div class="progress-meta">
+      <div class="progress-label" id="sectionLabel">Section 0 of 10</div>
+      <div class="progress-count" id="progressPct">0%</div>
+    </div>
+    <div class="progress-bar"><div class="progress-fill" id="progressFill" style="width:0%"></div></div>
+  </div>
+
+  <!-- ── SECTION 0: COMPANY CONTEXT ── -->
+  <div class="section active" id="sec-0">
+    <div class="section-header">
+      <div class="section-eyebrow">Getting Started</div>
+      <div class="section-title">Company Context</div>
+      <div class="section-desc">This information anchors your Blueprint. A few of these fields may already be familiar to us from your assessment.</div>
+    </div>
+
+    <div class="intro-card">
+      <div class="intro-card-title">From Your Operational Assessment</div>
+      <div class="score-grid" id="assessmentSummary">
+        <div class="score-item"><div class="score-item-label">Overall Score</div><div class="score-item-val" id="prevScore">—</div></div>
+        <div class="score-item"><div class="score-item-label">Tier</div><div class="score-item-val" id="prevTier">—</div></div>
+        <div class="score-item"><div class="score-item-label">Strongest Pillar</div><div class="score-item-val" id="prevStrong">—</div></div>
+        <div class="score-item"><div class="score-item-label">Biggest Opportunity</div><div class="score-item-val" id="prevWeak">—</div></div>
+      </div>
+    </div>
+
+    <div class="question-block">
+      <div class="q-label">What does your company do in one sentence? <span class="req">*</span></div>
+      <input type="text" id="q0_1" placeholder="e.g., We distribute industrial automation components to manufacturers in the Midwest">
+    </div>
+
+    <div class="question-block">
+      <div class="q-label">How many full-time employees do you have? (include yourself) <span class="req">*</span></div>
+      <div class="options" id="opts_q0_2">
+        <label class="option-label"><input type="radio" name="q0_2" value="1-5"> 1–5</label>
+        <label class="option-label"><input type="radio" name="q0_2" value="6-15"> 6–15</label>
+        <label class="option-label"><input type="radio" name="q0_2" value="16-30"> 16–30</label>
+        <label class="option-label"><input type="radio" name="q0_2" value="31-75"> 31–75</label>
+        <label class="option-label"><input type="radio" name="q0_2" value="76-150"> 76–150</label>
+      </div>
+    </div>
+
+    <div class="question-block">
+      <div class="q-label">Approximate annual revenue range <span class="req">*</span></div>
+      <div class="options" id="opts_q0_3">
+        <label class="option-label"><input type="radio" name="q0_3" value="under500k"> Under $500K</label>
+        <label class="option-label"><input type="radio" name="q0_3" value="500k-1m"> $500K – $1M</label>
+        <label class="option-label"><input type="radio" name="q0_3" value="1m-3m"> $1M – $3M</label>
+        <label class="option-label"><input type="radio" name="q0_3" value="3m-10m"> $3M – $10M</label>
+        <label class="option-label"><input type="radio" name="q0_3" value="over10m"> Over $10M</label>
+      </div>
+    </div>
+
+    <div class="question-block">
+      <div class="q-label">Company website URL</div>
+      <div class="q-hint">Used to personalize your Blueprint. We attempt to pull your logo automatically — no action needed if it doesn't work.</div>
+      <input type="url" id="q0_4" placeholder="https://yourcompany.com">
+    </div>
+
+    <div class="question-block">
+      <div class="q-label">How long have you been in business? <span class="req">*</span></div>
+      <div class="options" id="opts_q0_5">
+        <label class="option-label"><input type="radio" name="q0_5" value="under2"> Less than 2 years</label>
+        <label class="option-label"><input type="radio" name="q0_5" value="2-5"> 2–5 years</label>
+        <label class="option-label"><input type="radio" name="q0_5" value="5-10"> 5–10 years</label>
+        <label class="option-label"><input type="radio" name="q0_5" value="10plus"> 10+ years</label>
+      </div>
+    </div>
+
+    <div class="question-block">
+      <div class="q-label">What is the single biggest operational challenge your business faces right now? <span class="req">*</span></div>
+      <div class="q-hint">This becomes the anchor of your Executive Summary. Be specific — the more honest your answer, the more valuable your Blueprint.</div>
+      <textarea id="q0_6" placeholder="e.g., We lose 10+ hours a week manually updating pricing from vendor portals and still send wrong quotes regularly..."></textarea>
+    </div>
+
+    <div class="nav-bar">
+      <div></div>
+      <button class="btn-next" onclick="nextSection(0)">NEXT: VENDOR DATA →</button>
+    </div>
+  </div>
+
+  <!-- ── SECTION 1: VENDOR DATA ── -->
+  <div class="section" id="sec-1">
+    <div class="section-header">
+      <div class="section-eyebrow">Pillar 1 of 9</div>
+      <div class="section-title">Vendor Data & Pricing Intelligence</div>
+      <div class="section-desc">How you manage, access, and act on vendor pricing and contract information.</div>
+    </div>
+
+    <div class="question-block">
+      <div class="q-label">How many active vendors or suppliers do you currently manage? <span class="req">*</span></div>
+      <div class="options">
+        <label class="option-label"><input type="radio" name="q1_1" value="1-10" data-score="10"> 1–10</label>
+        <label class="option-label"><input type="radio" name="q1_1" value="11-25" data-score="8"> 11–25</label>
+        <label class="option-label"><input type="radio" name="q1_1" value="26-50" data-score="6"> 26–50</label>
+        <label class="option-label"><input type="radio" name="q1_1" value="51-100" data-score="4"> 51–100</label>
+        <label class="option-label"><input type="radio" name="q1_1" value="100plus" data-score="2"> 100+</label>
+      </div>
+    </div>
+
+    <div class="question-block">
+      <div class="q-label">How do you currently store and access vendor pricing? <span class="req">*</span></div>
+      <div class="options">
+        <label class="option-label"><input type="radio" name="q1_2" value="vendor_sites" data-score="0"> Vendor websites / catalogs — manual lookup each time</label>
+        <label class="option-label"><input type="radio" name="q1_2" value="spreadsheets" data-score="4"> Spreadsheets we maintain ourselves</label>
+        <label class="option-label"><input type="radio" name="q1_2" value="erp" data-score="10"> ERP or inventory management system</label>
+        <label class="option-label"><input type="radio" name="q1_2" value="mixed" data-score="2"> Mix of systems — no single source of truth</label>
+        <label class="option-label"><input type="radio" name="q1_2" value="no_process" data-score="0"> We don't have a consistent process</label>
+      </div>
+    </div>
+
+    <div class="question-block">
+      <div class="q-label">How often does vendor pricing cause errors in quotes or orders? <span class="req">*</span></div>
+      <div class="options">
+        <label class="option-label"><input type="radio" name="q1_3" value="rarely" data-score="10"> Rarely</label>
+        <label class="option-label"><input type="radio" name="q1_3" value="monthly" data-score="6"> Occasionally (monthly)</label>
+        <label class="option-label"><input type="radio" name="q1_3" value="weekly" data-score="3"> Frequently (weekly)</label>
+        <label class="option-label"><input type="radio" name="q1_3" value="daily" data-score="0"> Constantly (daily)</label>
+      </div>
+    </div>
+
+    <div class="question-block">
+      <div class="q-label">Do you have documented vendor contracts with pricing terms? <span class="req">*</span></div>
+      <div class="options">
+        <label class="option-label"><input type="radio" name="q1_4" value="all" data-score="10"> Yes, for all vendors</label>
+        <label class="option-label"><input type="radio" name="q1_4" value="major" data-score="7"> Yes, for major vendors only</label>
+        <label class="option-label"><input type="radio" name="q1_4" value="informal" data-score="3"> Informal agreements only</label>
+        <label class="option-label"><input type="radio" name="q1_4" value="none" data-score="0"> No formal contracts</label>
+      </div>
+    </div>
+
+    <div class="question-block">
+      <div class="q-label">Which vendor relationships or pricing situations cause you the most friction today?</div>
+      <div class="q-hint">e.g., "We have 3 vendors with overlapping products and never know who has the best price"</div>
+      <textarea id="q1_5" placeholder="Describe your biggest vendor pain point..."></textarea>
+    </div>
+
+    <div class="question-block">
+      <div class="q-label">How do you identify when a vendor's price has changed? <span class="req">*</span></div>
+      <div class="options">
+        <label class="option-label"><input type="radio" name="q1_6" value="dont" data-score="0"> We don't — we find out when an order is wrong</label>
+        <label class="option-label"><input type="radio" name="q1_6" value="vendor_notifies" data-score="5"> Vendors notify us directly</label>
+        <label class="option-label"><input type="radio" name="q1_6" value="periodic" data-score="7"> We check periodically</label>
+        <label class="option-label"><input type="radio" name="q1_6" value="automated" data-score="10"> We have an automated alert or system</label>
+      </div>
+    </div>
+
+    <div class="nav-bar">
+      <button class="btn-nav" onclick="prevSection(1)">← BACK</button>
+      <button class="btn-next" onclick="nextSection(1)">NEXT: WORKFLOW →</button>
+    </div>
+  </div>
+
+  <!-- ── SECTION 2: WORKFLOW ── -->
+  <div class="section" id="sec-2">
+    <div class="section-header">
+      <div class="section-eyebrow">Pillar 2 of 9</div>
+      <div class="section-title">Operational Workflow & Process</div>
+      <div class="section-desc">How work moves through your organization — and where it slows down or breaks.</div>
+    </div>
+
+    <div class="question-block">
+      <div class="q-label">How are your core business processes documented? <span class="req">*</span></div>
+      <div class="options">
+        <label class="option-label"><input type="radio" name="q2_1" value="fully" data-score="10"> Fully documented with SOPs everyone follows</label>
+        <label class="option-label"><input type="radio" name="q2_1" value="partial" data-score="6"> Partially — key processes only</label>
+        <label class="option-label"><input type="radio" name="q2_1" value="heads" data-score="2"> Mostly in people's heads</label>
+        <label class="option-label"><input type="radio" name="q2_1" value="none" data-score="0"> Not documented at all</label>
+      </div>
+    </div>
+
+    <div class="question-block">
+      <div class="q-label">Where do orders, jobs, or projects most commonly get delayed or dropped? <span class="req">*</span></div>
+      <div class="options">
+        <label class="option-label"><input type="radio" name="q2_2" value="handoff" data-score="4"> During handoff between team members</label>
+        <label class="option-label"><input type="radio" name="q2_2" value="waiting" data-score="4"> Waiting on info from vendors or customers</label>
+        <label class="option-label"><input type="radio" name="q2_2" value="approval" data-score="5"> Approval bottlenecks</label>
+        <label class="option-label"><input type="radio" name="q2_2" value="no_visibility" data-score="0"> We don't have visibility into where delays happen</label>
+        <label class="option-label"><input type="radio" name="q2_2" value="multiple" data-score="2"> Multiple of the above</label>
+      </div>
+    </div>
+
+    <div class="question-block">
+      <div class="q-label">How are tasks and work assigned to your team? <span class="req">*</span></div>
+      <div class="options">
+        <label class="option-label"><input type="radio" name="q2_3" value="verbal" data-score="0"> Verbal or informal / text messages</label>
+        <label class="option-label"><input type="radio" name="q2_3" value="email" data-score="3"> Email</label>
+        <label class="option-label"><input type="radio" name="q2_3" value="pm_tool" data-score="8"> Project management tool (Asana, Monday, etc.)</label>
+        <label class="option-label"><input type="radio" name="q2_3" value="erp" data-score="10"> Built into our ERP or business system</label>
+        <label class="option-label"><input type="radio" name="q2_3" value="mixed" data-score="2"> Mix with no consistent method</label>
+      </div>
+    </div>
+
+    <div class="question-block">
+      <div class="q-label">Walk me through what happens from the moment a new order or job comes in to the moment it's complete. Where does it slow down? <span class="req">*</span></div>
+      <textarea id="q2_4" placeholder="e.g., Customer calls or emails → CSR logs in our system → quote built manually by looking up 3 vendor sites → sent by email → if approved, order placed separately in ERP... biggest slowdown is the quote step, takes 30-60 minutes each time"></textarea>
+    </div>
+
+    <div class="question-block">
+      <div class="q-label">How much time per week does your team spend on manual data entry or re-entering the same info in multiple places? <span class="req">*</span></div>
+      <div class="options">
+        <label class="option-label"><input type="radio" name="q2_5" value="under2" data-score="10"> Less than 2 hours</label>
+        <label class="option-label"><input type="radio" name="q2_5" value="2-5" data-score="7"> 2–5 hours</label>
+        <label class="option-label"><input type="radio" name="q2_5" value="5-10" data-score="4"> 5–10 hours</label>
+        <label class="option-label"><input type="radio" name="q2_5" value="10-20" data-score="2"> 10–20 hours</label>
+        <label class="option-label"><input type="radio" name="q2_5" value="over20" data-score="0"> More than 20 hours</label>
+      </div>
+    </div>
+
+    <div class="question-block">
+      <div class="q-label">If a key employee were out for 2 weeks with no notice, how would operations be affected? <span class="req">*</span></div>
+      <div class="options">
+        <label class="option-label"><input type="radio" name="q2_6" value="minimal" data-score="10"> Minimal — processes are documented and transferable</label>
+        <label class="option-label"><input type="radio" name="q2_6" value="moderate" data-score="6"> Moderate — some disruption but manageable</label>
+        <label class="option-label"><input type="radio" name="q2_6" value="significant" data-score="2"> Significant — that area would largely stop</label>
+        <label class="option-label"><input type="radio" name="q2_6" value="critical" data-score="0"> Critical — the business would struggle to function</label>
+      </div>
+    </div>
+
+    <div class="nav-bar">
+      <button class="btn-nav" onclick="prevSection(2)">← BACK</button>
+      <button class="btn-next" onclick="nextSection(2)">NEXT: DECISION INTELLIGENCE →</button>
+    </div>
+  </div>
+
+  <!-- ── SECTION 3: DECISION INTELLIGENCE ── -->
+  <div class="section" id="sec-3">
+    <div class="section-header">
+      <div class="section-eyebrow">Pillar 3 of 9</div>
+      <div class="section-title">Decision Intelligence & Visibility</div>
+      <div class="section-desc">Whether you have the data you need, when you need it, to make confident decisions.</div>
+    </div>
+
+    <div class="question-block">
+      <div class="q-label">When you need to make a significant business decision, where does the information come from? <span class="req">*</span></div>
+      <div class="options">
+        <label class="option-label"><input type="radio" name="q3_1" value="realtime" data-score="10"> Real-time data from our systems</label>
+        <label class="option-label"><input type="radio" name="q3_1" value="manual_reports" data-score="5"> Reports we pull manually from multiple places</label>
+        <label class="option-label"><input type="radio" name="q3_1" value="gut" data-score="2"> Gut feel and experience</label>
+        <label class="option-label"><input type="radio" name="q3_1" value="ask_someone" data-score="3"> We ask whoever knows that area</label>
+        <label class="option-label"><input type="radio" name="q3_1" value="mix" data-score="4"> Mix of the above</label>
+      </div>
+    </div>
+
+    <div class="question-block">
+      <div class="q-label">Do you have a dashboard or report showing the health of your business at a glance? <span class="req">*</span></div>
+      <div class="options">
+        <label class="option-label"><input type="radio" name="q3_2" value="yes_regular" data-score="10"> Yes, I check it regularly</label>
+        <label class="option-label"><input type="radio" name="q3_2" value="exists_incomplete" data-score="5"> Something exists but it's incomplete or outdated</label>
+        <label class="option-label"><input type="radio" name="q3_2" value="piece_together" data-score="2"> No — I piece it together from multiple sources</label>
+        <label class="option-label"><input type="radio" name="q3_2" value="none" data-score="0"> No visibility at all</label>
+      </div>
+    </div>
+
+    <div class="question-block">
+      <div class="q-label">What business question do you find yourself unable to answer quickly because you don't have the right data? <span class="req">*</span></div>
+      <div class="q-hint">e.g., "I can never quickly tell which customers are most profitable"</div>
+      <textarea id="q3_3" placeholder="Be specific — this directly shapes your Blueprint's decision intelligence recommendations..."></textarea>
+    </div>
+
+    <div class="question-block">
+      <div class="q-label">How confident are you in the accuracy of your business data right now? <span class="req">*</span></div>
+      <div class="options">
+        <label class="option-label"><input type="radio" name="q3_4" value="very" data-score="10"> Very confident</label>
+        <label class="option-label"><input type="radio" name="q3_4" value="somewhat" data-score="6"> Somewhat confident</label>
+        <label class="option-label"><input type="radio" name="q3_4" value="not_very" data-score="3"> Not very confident</label>
+        <label class="option-label"><input type="radio" name="q3_4" value="dont_trust" data-score="0"> I don't trust our data</label>
+      </div>
+    </div>
+
+    <div class="question-block">
+      <div class="q-label">How long does it take to produce a report your leadership team needs? <span class="req">*</span></div>
+      <div class="options">
+        <label class="option-label"><input type="radio" name="q3_5" value="minutes" data-score="10"> Minutes — it's automated</label>
+        <label class="option-label"><input type="radio" name="q3_5" value="hours" data-score="6"> Hours — manual pull</label>
+        <label class="option-label"><input type="radio" name="q3_5" value="days" data-score="2"> Days — someone has to build it</label>
+        <label class="option-label"><input type="radio" name="q3_5" value="no_capability" data-score="0"> We don't have this capability</label>
+      </div>
+    </div>
+
+    <div class="nav-bar">
+      <button class="btn-nav" onclick="prevSection(3)">← BACK</button>
+      <button class="btn-next" onclick="nextSection(3)">NEXT: KNOWLEDGE ARCHITECTURE →</button>
+    </div>
+  </div>
+
+  <!-- ── SECTION 4: KNOWLEDGE ── -->
+  <div class="section" id="sec-4">
+    <div class="section-header">
+      <div class="section-eyebrow">Pillar 4 of 9</div>
+      <div class="section-title">Knowledge Architecture & Resilience</div>
+      <div class="section-desc">How institutional knowledge is stored, transferred, and protected in your organization.</div>
+    </div>
+
+    <div class="question-block">
+      <div class="q-label">How is institutional knowledge stored at your company? <span class="req">*</span></div>
+      <div class="options">
+        <label class="option-label"><input type="radio" name="q4_1" value="documented" data-score="10"> Documented in a shared system everyone can access</label>
+        <label class="option-label"><input type="radio" name="q4_1" value="emails" data-score="3"> In emails and chat threads</label>
+        <label class="option-label"><input type="radio" name="q4_1" value="heads" data-score="0"> In individuals' heads</label>
+        <label class="option-label"><input type="radio" name="q4_1" value="mixed" data-score="5"> Mix — some documented, most not</label>
+      </div>
+    </div>
+
+    <div class="question-block">
+      <div class="q-label">What happens when a long-tenured employee leaves? <span class="req">*</span></div>
+      <div class="options">
+        <label class="option-label"><input type="radio" name="q4_2" value="minimal" data-score="10"> Minimal disruption — their knowledge is documented</label>
+        <label class="option-label"><input type="radio" name="q4_2" value="some" data-score="6"> Some disruption — we piece it together over time</label>
+        <label class="option-label"><input type="radio" name="q4_2" value="significant" data-score="2"> Significant disruption — we lose expertise</label>
+        <label class="option-label"><input type="radio" name="q4_2" value="painful" data-score="0"> This has happened and it was very painful</label>
+      </div>
+    </div>
+
+    <div class="question-block">
+      <div class="q-label">How are customer preferences, history, and special requirements tracked? <span class="req">*</span></div>
+      <div class="options">
+        <label class="option-label"><input type="radio" name="q4_3" value="crm" data-score="10"> In a CRM system</label>
+        <label class="option-label"><input type="radio" name="q4_3" value="email" data-score="3"> In email / notes</label>
+        <label class="option-label"><input type="radio" name="q4_3" value="spreadsheet" data-score="5"> In a spreadsheet</label>
+        <label class="option-label"><input type="radio" name="q4_3" value="heads" data-score="0"> In people's heads</label>
+        <label class="option-label"><input type="radio" name="q4_3" value="not_tracked" data-score="0"> Not consistently tracked</label>
+      </div>
+    </div>
+
+    <div class="question-block">
+      <div class="q-label">What is one thing about how your business operates that only one or two people really know how to do? <span class="req">*</span></div>
+      <div class="q-hint">This is your single point of failure. It's okay — most companies have several. Naming it is the first step to protecting against it.</div>
+      <textarea id="q4_4" placeholder="e.g., Only our senior CSR knows how to pull pricing for custom MAC Valve configurations. If she left tomorrow, we'd be stuck..."></textarea>
+    </div>
+
+    <div class="question-block">
+      <div class="q-label">How easy is it to onboard a new employee and get them productive? <span class="req">*</span></div>
+      <div class="options">
+        <label class="option-label"><input type="radio" name="q4_5" value="very_easy" data-score="10"> Very easy — under 2 weeks</label>
+        <label class="option-label"><input type="radio" name="q4_5" value="moderate" data-score="6"> Moderate — 2–4 weeks</label>
+        <label class="option-label"><input type="radio" name="q4_5" value="slow" data-score="3"> Slow — 1–3 months</label>
+        <label class="option-label"><input type="radio" name="q4_5" value="very_slow" data-score="0"> Very slow — 3+ months</label>
+      </div>
+    </div>
+
+    <div class="nav-bar">
+      <button class="btn-nav" onclick="prevSection(4)">← BACK</button>
+      <button class="btn-next" onclick="nextSection(4)">NEXT: LEADERSHIP & STRATEGY →</button>
+    </div>
+  </div>
+
+  <!-- ── SECTION 5: LEADERSHIP ── -->
+  <div class="section" id="sec-5">
+    <div class="section-header">
+      <div class="section-eyebrow">Pillar 5 of 9</div>
+      <div class="section-title">Leadership & Strategy Alignment</div>
+      <div class="section-desc">How clearly your strategic intent translates into organizational direction and daily execution.</div>
+    </div>
+
+    <div class="question-block">
+      <div class="q-label">How clearly defined are your business goals for the next 12 months? <span class="req">*</span></div>
+      <div class="options">
+        <label class="option-label"><input type="radio" name="q5_1" value="clear_written" data-score="10"> Clearly defined, written down, and shared with the team</label>
+        <label class="option-label"><input type="radio" name="q5_1" value="in_head" data-score="5"> In my head but not formally documented</label>
+        <label class="option-label"><input type="radio" name="q5_1" value="loose" data-score="3"> Loosely defined</label>
+        <label class="option-label"><input type="radio" name="q5_1" value="reactive" data-score="0"> We're operating reactively — no formal goals</label>
+      </div>
+    </div>
+
+    <div class="question-block">
+      <div class="q-label">How much of your week is spent on reactive/firefighting vs. strategic work? <span class="req">*</span></div>
+      <div class="options">
+        <label class="option-label"><input type="radio" name="q5_2" value="mostly_strategic" data-score="10"> Mostly strategic (70%+)</label>
+        <label class="option-label"><input type="radio" name="q5_2" value="split" data-score="6"> Split evenly</label>
+        <label class="option-label"><input type="radio" name="q5_2" value="mostly_reactive" data-score="2"> Mostly reactive (70%+)</label>
+        <label class="option-label"><input type="radio" name="q5_2" value="entirely_reactive" data-score="0"> Almost entirely reactive</label>
+      </div>
+    </div>
+
+    <div class="question-block">
+      <div class="q-label">What one operational fix would give you the most time back as a leader? <span class="req">*</span></div>
+      <textarea id="q5_3" placeholder="e.g., If pricing was automated I'd save 8+ hours a week and could focus on new customer development..."></textarea>
+    </div>
+
+    <div class="question-block">
+      <div class="q-label">Do you have a leadership team or key managers who can make decisions without you? <span class="req">*</span></div>
+      <div class="options">
+        <label class="option-label"><input type="radio" name="q5_4" value="yes" data-score="10"> Yes — they operate independently</label>
+        <label class="option-label"><input type="radio" name="q5_4" value="partial" data-score="5"> Partially — some can, some can't</label>
+        <label class="option-label"><input type="radio" name="q5_4" value="no" data-score="2"> No — most decisions come through me</label>
+        <label class="option-label"><input type="radio" name="q5_4" value="only_me" data-score="0"> I am the only leadership</label>
+      </div>
+    </div>
+
+    <div class="nav-bar">
+      <button class="btn-nav" onclick="prevSection(5)">← BACK</button>
+      <button class="btn-next" onclick="nextSection(5)">NEXT: CUSTOMER EXPERIENCE →</button>
+    </div>
+  </div>
+
+  <!-- ── SECTION 6: CUSTOMER EXPERIENCE ── -->
+  <div class="section" id="sec-6">
+    <div class="section-header">
+      <div class="section-eyebrow">Pillar 6 of 9</div>
+      <div class="section-title">Customer Experience & Retention</div>
+      <div class="section-desc">How consistently your customers experience your business — and what drives them away.</div>
+    </div>
+
+    <div class="question-block">
+      <div class="q-label">Where do customers typically first experience friction with your company? <span class="req">*</span></div>
+      <div class="options">
+        <label class="option-label"><input type="radio" name="q6_1" value="response_time" data-score="5"> Response time / communication speed</label>
+        <label class="option-label"><input type="radio" name="q6_1" value="quote_accuracy" data-score="4"> Quote or pricing accuracy</label>
+        <label class="option-label"><input type="radio" name="q6_1" value="order_errors" data-score="3"> Order errors or fulfillment issues</label>
+        <label class="option-label"><input type="radio" name="q6_1" value="inconsistent" data-score="2"> Inconsistent service between team members</label>
+        <label class="option-label"><input type="radio" name="q6_1" value="none" data-score="10"> We don't have significant customer friction</label>
+        <label class="option-label"><input type="radio" name="q6_1" value="unknown" data-score="0"> I'm not sure — we don't track this</label>
+      </div>
+    </div>
+
+    <div class="question-block">
+      <div class="q-label">What percentage of your revenue comes from repeat customers? <span class="req">*</span></div>
+      <div class="options">
+        <label class="option-label"><input type="radio" name="q6_2" value="under25" data-score="3"> Less than 25%</label>
+        <label class="option-label"><input type="radio" name="q6_2" value="25-50" data-score="6"> 25–50%</label>
+        <label class="option-label"><input type="radio" name="q6_2" value="50-75" data-score="8"> 50–75%</label>
+        <label class="option-label"><input type="radio" name="q6_2" value="over75" data-score="10"> More than 75%</label>
+      </div>
+    </div>
+
+    <div class="question-block">
+      <div class="q-label">Describe the last time a customer complained or churned. What was the root cause? <span class="req">*</span></div>
+      <div class="q-hint">If you can't think of one, describe what you think the most likely reason would be.</div>
+      <textarea id="q6_3" placeholder="e.g., Customer got two wrong quotes in a row because we had outdated pricing. They went to a competitor..."></textarea>
+    </div>
+
+    <div class="question-block">
+      <div class="q-label">How consistent is the customer experience across different employees? <span class="req">*</span></div>
+      <div class="options">
+        <label class="option-label"><input type="radio" name="q6_4" value="very" data-score="10"> Very consistent — we have standards everyone follows</label>
+        <label class="option-label"><input type="radio" name="q6_4" value="mostly" data-score="7"> Mostly consistent — minor variations</label>
+        <label class="option-label"><input type="radio" name="q6_4" value="inconsistent" data-score="3"> Inconsistent — depends heavily on who they work with</label>
+        <label class="option-label"><input type="radio" name="q6_4" value="very_inconsistent" data-score="0"> Very inconsistent — we know this is a problem</label>
+      </div>
+    </div>
+
+    <div class="nav-bar">
+      <button class="btn-nav" onclick="prevSection(6)">← BACK</button>
+      <button class="btn-next" onclick="nextSection(6)">NEXT: SALES & PIPELINE →</button>
+    </div>
+  </div>
+
+  <!-- ── SECTION 7: SALES ── -->
+  <div class="section" id="sec-7">
+    <div class="section-header">
+      <div class="section-eyebrow">Pillar 7 of 9</div>
+      <div class="section-title">Sales & Pipeline Intelligence</div>
+      <div class="section-desc">How well you can see, forecast, and optimize your revenue pipeline.</div>
+    </div>
+
+    <div class="question-block">
+      <div class="q-label">How do you currently track your sales pipeline or active opportunities? <span class="req">*</span></div>
+      <div class="options">
+        <label class="option-label"><input type="radio" name="q7_1" value="crm" data-score="10"> CRM system (Salesforce, HubSpot, etc.)</label>
+        <label class="option-label"><input type="radio" name="q7_1" value="spreadsheet" data-score="5"> Spreadsheet</label>
+        <label class="option-label"><input type="radio" name="q7_1" value="email" data-score="2"> Email / notes</label>
+        <label class="option-label"><input type="radio" name="q7_1" value="head" data-score="1"> In my head</label>
+        <label class="option-label"><input type="radio" name="q7_1" value="dont_track" data-score="0"> We don't actively track pipeline</label>
+      </div>
+    </div>
+
+    <div class="question-block">
+      <div class="q-label">How confident are you in your ability to forecast next month's revenue? <span class="req">*</span></div>
+      <div class="options">
+        <label class="option-label"><input type="radio" name="q7_2" value="very" data-score="10"> Very confident — we have reliable data</label>
+        <label class="option-label"><input type="radio" name="q7_2" value="somewhat" data-score="5"> Somewhat — educated guess</label>
+        <label class="option-label"><input type="radio" name="q7_2" value="low" data-score="2"> Low confidence — it's mostly a guess</label>
+        <label class="option-label"><input type="radio" name="q7_2" value="dont" data-score="0"> We don't forecast revenue</label>
+      </div>
+    </div>
+
+    <div class="question-block">
+      <div class="q-label">What is your biggest bottleneck in converting a prospect to a paying customer? <span class="req">*</span></div>
+      <textarea id="q7_3" placeholder="e.g., Getting accurate quotes back fast enough — by the time we respond, they've already called someone else..."></textarea>
+    </div>
+
+    <div class="question-block">
+      <div class="q-label">Do you know which products, services, or customer types are most profitable? <span class="req">*</span></div>
+      <div class="options">
+        <label class="option-label"><input type="radio" name="q7_4" value="yes_data" data-score="10"> Yes — we have data on this</label>
+        <label class="option-label"><input type="radio" name="q7_4" value="roughly" data-score="5"> Roughly — we have a general sense</label>
+        <label class="option-label"><input type="radio" name="q7_4" value="no" data-score="2"> No visibility into profitability by type</label>
+        <label class="option-label"><input type="radio" name="q7_4" value="never" data-score="0"> We've never analyzed this</label>
+      </div>
+    </div>
+
+    <div class="nav-bar">
+      <button class="btn-nav" onclick="prevSection(7)">← BACK</button>
+      <button class="btn-next" onclick="nextSection(7)">NEXT: FINANCIAL VISIBILITY →</button>
+    </div>
+  </div>
+
+  <!-- ── SECTION 8: FINANCIAL ── -->
+  <div class="section" id="sec-8">
+    <div class="section-header">
+      <div class="section-eyebrow">Pillar 8 of 9</div>
+      <div class="section-title">Financial Visibility & Control</div>
+      <div class="section-desc">How clearly you can see your financial health and make decisions from that data.</div>
+    </div>
+
+    <div class="question-block">
+      <div class="q-label">How quickly can you determine your current profit margin? <span class="req">*</span></div>
+      <div class="options">
+        <label class="option-label"><input type="radio" name="q8_1" value="instant" data-score="10"> Instantly — it's in my dashboard</label>
+        <label class="option-label"><input type="radio" name="q8_1" value="day" data-score="7"> Within a day — I can pull it</label>
+        <label class="option-label"><input type="radio" name="q8_1" value="week" data-score="3"> Within a week — someone has to calculate it</label>
+        <label class="option-label"><input type="radio" name="q8_1" value="no_data" data-score="0"> I don't have reliable margin data</label>
+      </div>
+    </div>
+
+    <div class="question-block">
+      <div class="q-label">Do you have visibility into cash flow 30–90 days out? <span class="req">*</span></div>
+      <div class="options">
+        <label class="option-label"><input type="radio" name="q8_2" value="reliable" data-score="10"> Yes, I have a reliable forecast</label>
+        <label class="option-label"><input type="radio" name="q8_2" value="rough" data-score="5"> Rough estimate only</label>
+        <label class="option-label"><input type="radio" name="q8_2" value="no" data-score="2"> No forward visibility</label>
+        <label class="option-label"><input type="radio" name="q8_2" value="concern" data-score="0"> Cash flow is a constant concern</label>
+      </div>
+    </div>
+
+    <div class="question-block">
+      <div class="q-label">What financial question do you wish you could answer in real time but currently can't? <span class="req">*</span></div>
+      <textarea id="q8_3" placeholder="e.g., I can never tell in the moment which jobs are actually making money vs. just keeping people busy..."></textarea>
+    </div>
+
+    <div class="question-block">
+      <div class="q-label">How often do you experience unexpected cash shortfalls or financial surprises? <span class="req">*</span></div>
+      <div class="options">
+        <label class="option-label"><input type="radio" name="q8_4" value="never" data-score="10"> Never</label>
+        <label class="option-label"><input type="radio" name="q8_4" value="occasionally" data-score="6"> Occasionally</label>
+        <label class="option-label"><input type="radio" name="q8_4" value="regularly" data-score="2"> Regularly</label>
+        <label class="option-label"><input type="radio" name="q8_4" value="frequently" data-score="0"> Frequently — it's stressful</label>
+      </div>
+    </div>
+
+    <div class="nav-bar">
+      <button class="btn-nav" onclick="prevSection(8)">← BACK</button>
+      <button class="btn-next" onclick="nextSection(8)">NEXT: COMPLIANCE & RISK →</button>
+    </div>
+  </div>
+
+  <!-- ── SECTION 9: COMPLIANCE ── -->
+  <div class="section" id="sec-9">
+    <div class="section-header">
+      <div class="section-eyebrow">Pillar 9 of 9</div>
+      <div class="section-title">Compliance & Risk Architecture</div>
+      <div class="section-desc">Where your business is exposed — operationally, contractually, and structurally.</div>
+    </div>
+
+    <div class="question-block">
+      <div class="q-label">How would you describe your company's regulatory or compliance exposure? <span class="req">*</span></div>
+      <div class="options">
+        <label class="option-label"><input type="radio" name="q9_1" value="high" data-score="3"> High — we operate in a heavily regulated industry</label>
+        <label class="option-label"><input type="radio" name="q9_1" value="moderate" data-score="6"> Moderate — some compliance requirements</label>
+        <label class="option-label"><input type="radio" name="q9_1" value="low" data-score="10"> Low — minimal formal compliance obligations</label>
+        <label class="option-label"><input type="radio" name="q9_1" value="unsure" data-score="2"> Unsure — we haven't fully assessed this</label>
+      </div>
+    </div>
+
+    <div class="question-block">
+      <div class="q-label">How are vendor contracts and agreements managed? <span class="req">*</span></div>
+      <div class="options">
+        <label class="option-label"><input type="radio" name="q9_2" value="centralized" data-score="10"> Centralized system with renewal alerts</label>
+        <label class="option-label"><input type="radio" name="q9_2" value="spreadsheet" data-score="6"> Tracked in a spreadsheet</label>
+        <label class="option-label"><input type="radio" name="q9_2" value="filed" data-score="2"> Filed and mostly forgotten</label>
+        <label class="option-label"><input type="radio" name="q9_2" value="no_tracking" data-score="0"> No formal tracking</label>
+      </div>
+    </div>
+
+    <div class="question-block">
+      <div class="q-label">What is the single biggest operational risk in your business right now? <span class="req">*</span></div>
+      <div class="q-hint">This could be a key person, a vendor dependency, a process failure point, a compliance gap — anything that keeps you up at night.</div>
+      <textarea id="q9_3" placeholder="e.g., Our entire pricing process runs through one person. If she left, we'd have no way to quote accurately for weeks..."></textarea>
+    </div>
+
+    <div class="question-block">
+      <div class="q-label">Have you experienced a significant operational disruption in the last 2 years? <span class="req">*</span></div>
+      <div class="options">
+        <label class="option-label"><input type="radio" name="q9_4" value="yes_major" data-score="0"> Yes, and it significantly impacted the business</label>
+        <label class="option-label"><input type="radio" name="q9_4" value="yes_minor" data-score="5"> Yes, but we recovered quickly</label>
+        <label class="option-label"><input type="radio" name="q9_4" value="minor" data-score="7"> Minor incidents only</label>
+        <label class="option-label"><input type="radio" name="q9_4" value="none" data-score="10"> No significant disruptions</label>
+      </div>
+    </div>
+
+    <div class="nav-bar">
+      <button class="btn-nav" onclick="prevSection(9)">← BACK</button>
+      <button class="btn-next" onclick="nextSection(9)">REVIEW & SUBMIT →</button>
+    </div>
+  </div>
+
+  <!-- ── SECTION 10: REVIEW & SUBMIT ── -->
+  <div class="section" id="sec-10">
+    <div class="section-header">
+      <div class="section-eyebrow">Final Step</div>
+      <div class="section-title">Review & Submit</div>
+      <div class="section-desc">Your diagnostic is complete. Review your pillar scores below, then submit to begin Blueprint generation.</div>
+    </div>
+
+    <div id="scorePreview" style="margin-bottom:2rem;"></div>
+
+    <div style="background:var(--card);border:1px solid var(--border);border-left:3px solid var(--teal);border-radius:12px;padding:1.5rem;margin-bottom:1.5rem;">
+      <div style="font-family:var(--font-display);font-size:0.75rem;font-weight:700;color:var(--teal);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:0.75rem;">WHAT HAPPENS NEXT</div>
+      <div style="color:var(--mid);font-size:0.9rem;line-height:1.7;">
+        Vault Neuron will now build your Operational Intelligence Blueprint using your assessment results, this diagnostic, and your team's responses. You will receive your Blueprint within the timeline discussed during your engagement. Questions? <a href="mailto:connect@vaultneuron.com" style="color:var(--teal);text-decoration:none;">connect@vaultneuron.com</a>
+      </div>
+    </div>
+
+    <div class="nav-bar">
+      <button class="btn-nav" onclick="prevSection(10)">← BACK</button>
+      <button class="btn-next" id="submitBtn" onclick="submitDiagnostic()" style="background:linear-gradient(135deg,var(--purple),#5a1f8a);padding:0.85rem 2.5rem;">SUBMIT DIAGNOSTIC ✓</button>
+    </div>
+  </div>
+
+  <!-- ── COMPLETION ── -->
+  <div class="section" id="sec-complete">
+    <div class="completion">
+      <div class="completion-icon">✓</div>
+      <div class="completion-title">Diagnostic Complete</div>
+      <div class="completion-sub">Thank you, <span id="completionName"></span>. Your Leadership Diagnostic has been submitted. Vault Neuron will now begin building your Operational Intelligence Blueprint.</div>
+      <div class="completion-id" id="completionId"></div>
+      <div style="color:var(--muted);font-size:0.85rem;">Questions? <a href="mailto:connect@vaultneuron.com" style="color:var(--teal);text-decoration:none;">connect@vaultneuron.com</a></div>
+    </div>
+  </div>
+
+</div><!-- /app -->
+
+<script>
+// ── CONFIG ──────────────────────────────────────────────────────
+const WEBHOOK_URL = 'YOUR_APPS_SCRIPT_WEBHOOK_URL_HERE';
+const SHEETS_ID   = '1yLm7B_3qixOeS0lgCwVU-fn6g7MeNhhKpHCyvJtCvZo';
+
+// ── STATE ───────────────────────────────────────────────────────
+let currentSection = 0;
+let totalSections  = 10;
+let clientData     = {};
+
+// ── TOKEN VALIDATION ────────────────────────────────────────────
+async function validateToken() {
+  const token = document.getElementById('tokenInput').value.trim().toUpperCase();
+  const errEl = document.getElementById('gateError');
+
+  if (!token) {
+    errEl.textContent = 'Please enter your diagnostic token.';
+    return;
+  }
+
+  errEl.textContent = 'Validating...';
+  errEl.style.color = 'var(--teal)';
+
+  try {
+    const res = await fetch(`${WEBHOOK_URL}?action=validateToken&token=${encodeURIComponent(token)}&type=leadership`);
+    const data = await res.json();
+
+    if (data.valid) {
+      clientData = data;
+      errEl.textContent = '';
+      launchApp(data);
+    } else {
+      errEl.style.color = 'var(--red)';
+      errEl.textContent = data.message || 'Invalid or already used token. Contact connect@vaultneuron.com';
+    }
+  } catch(e) {
+    errEl.style.color = 'var(--red)';
+    errEl.textContent = 'Connection error. Please try again or contact connect@vaultneuron.com';
+  }
+}
+
+// Allow Enter key on token input
+document.getElementById('tokenInput').addEventListener('keydown', e => {
+  if (e.key === 'Enter') validateToken();
+});
+
+// ── LAUNCH APP ──────────────────────────────────────────────────
+function launchApp(data) {
+  document.getElementById('gate').classList.add('hidden');
+  document.getElementById('app').style.display = 'block';
+
+  // Populate company badge
+  document.getElementById('companyBadge').textContent = data.company || 'YOUR COMPANY';
+
+  // Populate assessment summary
+  document.getElementById('prevScore').textContent = data.prevScore ? `${data.prevScore}%` : '—';
+  document.getElementById('prevTier').textContent  = data.prevTier  || '—';
+  document.getElementById('prevStrong').textContent = data.prevStrong || '—';
+  document.getElementById('prevWeak').textContent   = data.prevWeak   || '—';
+
+  updateProgress();
+}
+
+// ── NAVIGATION ──────────────────────────────────────────────────
+function nextSection(from) {
+  if (!validateSection(from)) return;
+  document.getElementById(`sec-${from}`).classList.remove('active');
+
+  if (from === totalSections - 1) {
+    // Going to review
+    buildScorePreview();
+    document.getElementById('sec-10').classList.add('active');
+    currentSection = 10;
+  } else if (from === 10) {
+    // Submit handled by button
+  } else {
+    currentSection = from + 1;
+    document.getElementById(`sec-${currentSection}`).classList.add('active');
+  }
+
+  updateProgress();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function prevSection(from) {
+  document.getElementById(`sec-${from}`).classList.remove('active');
+  currentSection = from - 1;
+  document.getElementById(`sec-${currentSection}`).classList.add('active');
+  updateProgress();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+// ── PROGRESS ────────────────────────────────────────────────────
+function updateProgress() {
+  const pct = Math.round((currentSection / totalSections) * 100);
+  document.getElementById('progressFill').style.width = `${pct}%`;
+  document.getElementById('progressPct').textContent  = `${pct}%`;
+
+  const labels = ['Company Context','Vendor Data','Workflow','Decision Intelligence',
+    'Knowledge Architecture','Leadership & Strategy','Customer Experience',
+    'Sales & Pipeline','Financial Visibility','Compliance & Risk','Review & Submit'];
+  document.getElementById('sectionLabel').textContent =
+    currentSection <= 10 ? `${labels[currentSection]}` : 'Complete';
+}
+
+// ── VALIDATION ──────────────────────────────────────────────────
+function validateSection(secNum) {
+  let valid = true;
+  const sec = document.getElementById(`sec-${secNum}`);
+
+  // Clear previous errors
+  sec.querySelectorAll('.question-block').forEach(b => b.classList.remove('required-error'));
+
+  // Check required radio groups
+  const radioGroups = {};
+  sec.querySelectorAll('input[type="radio"]').forEach(r => {
+    if (!radioGroups[r.name]) radioGroups[r.name] = false;
+    if (r.checked) radioGroups[r.name] = true;
+  });
+
+  Object.keys(radioGroups).forEach(name => {
+    if (!radioGroups[name]) {
+      const block = sec.querySelector(`input[name="${name}"]`)?.closest('.question-block');
+      if (block) { block.classList.add('required-error'); valid = false; }
+    }
+  });
+
+  // Check required text fields
+  sec.querySelectorAll('input[type="text"][id], textarea[id]').forEach(el => {
+    const block = el.closest('.question-block');
+    const label = block?.querySelector('.q-label');
+    if (label?.querySelector('.req') && !el.value.trim()) {
+      block.classList.add('required-error');
+      valid = false;
+    }
+  });
+
+  if (!valid) {
+    const firstError = sec.querySelector('.required-error');
+    firstError?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }
+
+  return valid;
+}
+
+// ── RADIO HIGHLIGHT ─────────────────────────────────────────────
+document.addEventListener('change', e => {
+  if (e.target.type === 'radio') {
+    const group = document.querySelectorAll(`input[name="${e.target.name}"]`);
+    group.forEach(r => r.closest('.option-label')?.classList.toggle('selected', r.checked));
+  }
+});
+
+// ── PILLAR SCORING ───────────────────────────────────────────────
+const pillarMap = {
+  P1: ['q1_1','q1_2','q1_3','q1_4','q1_6'],
+  P2: ['q2_1','q2_2','q2_3','q2_5','q2_6'],
+  P3: ['q3_1','q3_2','q3_4','q3_5'],
+  P4: ['q4_1','q4_2','q4_3','q4_5'],
+  P5: ['q5_1','q5_2','q5_4'],
+  P6: ['q6_1','q6_2','q6_4'],
+  P7: ['q7_1','q7_2','q7_4'],
+  P8: ['q8_1','q8_2','q8_4'],
+  P9: ['q9_1','q9_2','q9_4'],
+};
+
+const pillarNames = {
+  P1:'Vendor Data & Pricing', P2:'Operational Workflow', P3:'Decision Intelligence',
+  P4:'Knowledge Architecture', P5:'Leadership & Strategy', P6:'Customer Experience',
+  P7:'Sales & Pipeline', P8:'Financial Visibility', P9:'Compliance & Risk'
+};
+
+function getPillarScore(pillar) {
+  const questions = pillarMap[pillar];
+  let score = 0; let max = 0;
+  questions.forEach(q => {
+    const sel = document.querySelector(`input[name="${q}"]:checked`);
+    const val = parseInt(sel?.getAttribute('data-score') || '0');
+    score += val;
+    max += 10;
+  });
+  return { score, max, pct: max > 0 ? Math.round((score / max) * 100) : 0 };
+}
+
+function getTier(pct) {
+  if (pct >= 80) return { label: 'Operational Intelligence Ready', color: 'var(--teal)' };
+  if (pct >= 60) return { label: 'Scaling Friction Detected', color: '#4ade80' };
+  if (pct >= 40) return { label: 'Architecture Stress Identified', color: 'var(--amber)' };
+  return { label: 'Critical Operational Fragmentation', color: 'var(--red)' };
+}
+
+function buildScorePreview() {
+  const container = document.getElementById('scorePreview');
+  let html = `<div style="font-family:var(--font-display);font-size:0.75rem;font-weight:700;color:var(--teal);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:1rem;">YOUR PILLAR SCORES</div>`;
+  html += `<div style="display:flex;flex-direction:column;gap:0.6rem;">`;
+
+  let totalScore = 0; let totalMax = 0;
+  Object.keys(pillarMap).forEach(p => {
+    const { score, max, pct } = getPillarScore(p);
+    totalScore += score; totalMax += max;
+    const tier = getTier(pct);
+    html += `
+      <div style="background:var(--card);border:1px solid var(--border);border-radius:10px;padding:0.85rem 1rem;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.4rem;">
+          <div style="font-size:0.85rem;color:var(--white);font-weight:500;">${pillarNames[p]}</div>
+          <div style="font-family:var(--font-display);font-weight:700;font-size:1rem;color:${tier.color};">${pct}%</div>
+        </div>
+        <div style="height:3px;background:var(--border);border-radius:2px;">
+          <div style="height:100%;width:${pct}%;background:${tier.color};border-radius:2px;transition:width 0.5s;"></div>
+        </div>
+      </div>`;
+  });
+
+  const overallPct = Math.round((totalScore / totalMax) * 100);
+  const overallTier = getTier(overallPct);
+  html += `</div>
+    <div style="background:var(--bg2);border:1px solid var(--purple);border-radius:12px;padding:1.2rem;margin-top:1.2rem;display:flex;justify-content:space-between;align-items:center;">
+      <div>
+        <div style="font-size:0.72rem;color:var(--muted);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:0.2rem;">Overall Score</div>
+        <div style="font-family:var(--font-display);font-size:1.6rem;font-weight:800;color:${overallTier.color};">${overallPct}%</div>
+      </div>
+      <div style="text-align:right;">
+        <div style="font-size:0.72rem;color:var(--muted);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:0.2rem;">Tier</div>
+        <div style="font-family:var(--font-display);font-size:0.85rem;font-weight:700;color:${overallTier.color};">${overallTier.label}</div>
+      </div>
+    </div>`;
+
+  container.innerHTML = html;
+}
+
+// ── COLLECT ALL ANSWERS ──────────────────────────────────────────
+function collectAnswers() {
+  const ans = {};
+
+  // Text fields
+  ['q0_1','q0_4','q0_6','q1_5','q2_4','q3_3','q4_4','q5_3','q6_3','q7_3','q8_3','q9_3'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) ans[id] = el.value.trim();
+  });
+
+  // Radio fields
+  document.querySelectorAll('input[type="radio"]:checked').forEach(r => {
+    ans[r.name] = r.value;
+  });
+
+  // Pillar scores
+  let totalScore = 0; let totalMax = 0;
+  Object.keys(pillarMap).forEach(p => {
+    const { score, max, pct } = getPillarScore(p);
+    ans[`${p}_score`] = score;
+    ans[`${p}_max`]   = max;
+    ans[`${p}_pct`]   = pct;
+    ans[`${p}_tier`]  = getTier(pct).label;
+    totalScore += score; totalMax += max;
+  });
+
+  ans.totalScore  = totalScore;
+  ans.totalMax    = totalMax;
+  ans.totalPct    = Math.round((totalScore / totalMax) * 100);
+  ans.overallTier = getTier(ans.totalPct).label;
+  ans.diagId      = clientData.diagId;
+  ans.company     = clientData.company;
+  ans.clientEmail = clientData.email;
+  ans.token       = clientData.token;
+  ans.formType    = 'leadership';
+  ans.timestamp   = new Date().toISOString();
+
+  return ans;
+}
+
+// ── SUBMIT ───────────────────────────────────────────────────────
+async function submitDiagnostic() {
+  const btn = document.getElementById('submitBtn');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span> SUBMITTING...';
+
+  document.getElementById('submittingOverlay').classList.add('show');
+
+  const payload = collectAnswers();
+
+  try {
+    await fetch(WEBHOOK_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'submitLeadershipDiagnostic', data: payload })
+    });
+
+    // Show completion
+    document.getElementById('sec-10').classList.remove('active');
+    document.getElementById('sec-complete').classList.add('active');
+    document.getElementById('completionName').textContent = clientData.name || clientData.company;
+    document.getElementById('completionId').textContent   = `Diagnostic ID: ${clientData.diagId}`;
+    document.getElementById('submittingOverlay').classList.remove('show');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+
+  } catch(e) {
+    document.getElementById('submittingOverlay').classList.remove('show');
+    btn.disabled = false;
+    btn.innerHTML = 'SUBMIT DIAGNOSTIC ✓';
+    alert('Submission error. Please try again or contact connect@vaultneuron.com');
+  }
+}
+</script>
+</body>
+</html>
