@@ -177,9 +177,7 @@ export default function SolutionsPage({ setPage }) {
       <section style={{ padding: "80px clamp(20px,6vw,80px)" }}>
         <div style={{ maxWidth: 800, margin: "0 auto", textAlign: "center" }}>
           <h2 style={{ fontSize: "clamp(24px,3vw,38px)", fontWeight: 900, margin: "0 0 20px", fontFamily: "Georgia, serif" }}>
-            Not a tool. Not a consultant.<br />
-            <span style={{ background: `linear-gradient(135deg, ${C.purple}, ${C.teal})`, WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>
-              The architecture in between.
+            The layer tools can't replace.<br />
             </span>
           </h2>
           <p style={{ fontSize: 16, color: C.light, lineHeight: 1.9, margin: "0 auto 36px", maxWidth: 560, fontFamily: "Georgia, serif" }}>
