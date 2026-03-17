@@ -171,7 +171,7 @@ export default function HomePage({ setPage }) {
           </p>
           <div style={{ display: "inline-flex", alignItems: "center", gap: 12, fontFamily: "monospace", fontSize: 11, color: C.slate, letterSpacing: 1 }}>
             <span style={{ width: 32, height: 1, background: C.border, display: "inline-block" }} />
-            NOT A TOOL. NOT A CONSULTANT. THE ARCHITECTURE IN BETWEEN.
+            The layer tools can't replace.
             <span style={{ width: 32, height: 1, background: C.border, display: "inline-block" }} />
           </div>
         </div>
