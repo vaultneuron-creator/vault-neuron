@@ -177,8 +177,7 @@ export default function SolutionsPage({ setPage }) {
       <section style={{ padding: "80px clamp(20px,6vw,80px)" }}>
         <div style={{ maxWidth: 800, margin: "0 auto", textAlign: "center" }}>
           <h2 style={{ fontSize: "clamp(24px,3vw,38px)", fontWeight: 900, margin: "0 0 20px", fontFamily: "Georgia, serif" }}>
-            The layer tools can't replace.<br />
-            </span>
+            The layer tools can't replace.
           </h2>
           <p style={{ fontSize: 16, color: C.light, lineHeight: 1.9, margin: "0 auto 36px", maxWidth: 560, fontFamily: "Georgia, serif" }}>
             Consultants deliver decks and leave. SaaS tools give you another subscription. Vault Neuron builds the operational system that makes everything you already have work the way it was supposed to.
