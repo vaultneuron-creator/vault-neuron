@@ -3,7 +3,7 @@ import { C } from "./tokens";
 
 // ── Google Sheets Web App URL ──────────────────────────────────────────────
 // Replace this with your deployed Apps Script Web App URL after setup
-const SHEETS_WEBHOOK = "https://script.google.com/macros/s/AKfycbyLyagTdwrp4Xer_uh4j33wRx-_6FTF4fUqUX6tbsbLIAJJyenp6_pAeOUBma03cfmcMw/exec";
+const SHEETS_WEBHOOK = "https://script.google.com/macros/s/AKfycbwIdEXcV4D5oktfu4VMlqelHMkSOScvqAuMJh3QZamQv3HOnKVpXszxFz1R8Jl50vnVMA/exec";
 // ──────────────────────────────────────────────────────────────────────────
 
 const Pill = ({ text, color = C.purple }) => (
