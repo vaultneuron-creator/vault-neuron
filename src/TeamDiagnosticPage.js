@@ -1,276 +1,297 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { C } from "./tokens";
 
-const SHEETS_WEBHOOK = "https://script.google.com/macros/s/AKfycbwIdEXcV4D5oktfu4VMlqelHMkSOScvqAuMJh3QZamQv3HOnKVpXszxFz1R8Jl50vnVMA/exec";
-
+const WEBHOOK = "https://script.google.com/macros/s/AKfycbwIdEXcV4D5oktfu4VMlqelHMkSOScvqAuMJh3QZamQv3HOnKVpXszxFz1R8Jl50vnVMA/exec";
 const mono = { fontFamily: "'Courier New', monospace" };
 const serif = { fontFamily: "Georgia, serif" };
 
 const Pill = ({ text, color = C.teal }) => (
-  <span style={{ background: color + "22", border: `1px solid ${color}55`, borderRadius: 4, padding: "4px 14px", fontSize: 11, color, ...mono, letterSpacing: 2.5, textTransform: "uppercase", display: "inline-block", fontWeight: 600 }}>{text}</span>
+  <span style={{ background:color+"22", border:`1px solid ${color}55`, borderRadius:4, padding:"4px 14px", fontSize:11, color, ...mono, letterSpacing:2.5, textTransform:"uppercase", display:"inline-block", fontWeight:600 }}>{text}</span>
 );
 
-const sections = [
-  {
-    id: "role", label: "Your Role", color: C.teal, tag: "Context",
-    intro: "A few quick questions to help us understand your perspective. Your responses are completely anonymous.",
-    questions: [
-      { id: "role_tenure", type: "select", label: "How long have you been with the company?", options: ["Less than 6 months", "6-12 months", "1-2 years", "3-5 years", "6-10 years", "10+ years"] },
-      { id: "role_area", type: "select", label: "Which area best describes your role?", options: ["Sales / Business Development", "Operations / Production / Shop Floor", "Estimating / Quoting", "Customer Service", "Purchasing / Procurement", "Administration / Finance", "Management / Leadership", "Other"] },
-    ],
+const inputStyle = { background:"rgba(255,255,255,0.06)", border:"1px solid rgba(255,255,255,0.2)", borderRadius:6, padding:"11px 14px", color:"#F0F4FF", fontSize:14, fontFamily:"Georgia,serif", outline:"none", width:"100%", boxSizing:"border-box" };
+const textareaStyle = { ...inputStyle, resize:"vertical", minHeight:80, lineHeight:1.6 };
+
+function MultipleChoiceQuestion({ id, label, options, value, onValue }) {
+  return (
+    <div style={{ marginBottom:28 }}>
+      <p style={{ fontSize:15, color:"rgba(255,255,255,0.92)", margin:"0 0 12px", lineHeight:1.7, ...serif }}>{label}</p>
+      <div style={{ display:"flex", flexDirection:"column", gap:8 }}>
+        {options.map(opt => (
+          <button key={opt.value} onClick={() => onValue(id, opt.value)} style={{ background:value===opt.value?C.teal+"33":"rgba(255,255,255,0.04)", border:`1px solid ${value===opt.value?C.teal:"rgba(255,255,255,0.15)"}`, borderRadius:8, padding:"11px 16px", color:value===opt.value?"#F0F4FF":"rgba(255,255,255,0.75)", fontSize:13, cursor:"pointer", fontFamily:"Georgia,serif", textAlign:"left", transition:"all 0.15s" }}>
+            <span style={{ color:value===opt.value?C.teal:"rgba(255,255,255,0.35)", ...mono, fontSize:11, marginRight:10, fontWeight:700 }}>{opt.label}</span>
+            {opt.text}
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function RatingQuestion({ id, label, value, onValue, color = C.teal }) {
+  const labels = ["","Does not exist / never","Rarely / inconsistently","Sometimes / partially","Usually works","Always / fully reliable"];
+  return (
+    <div style={{ marginBottom:28 }}>
+      <p style={{ fontSize:15, color:"rgba(255,255,255,0.92)", margin:"0 0 12px", lineHeight:1.7, ...serif }}>{label}</p>
+      <div style={{ display:"flex", gap:10, flexWrap:"wrap" }}>
+        {[1,2,3,4,5].map(val => (
+          <button key={val} onClick={() => onValue(id, val)} style={{ width:52, height:52, borderRadius:8, background:value===val?color:"rgba(255,255,255,0.06)", border:`1px solid ${value===val?color:"rgba(255,255,255,0.18)"}`, color:value===val?"#fff":"rgba(255,255,255,0.75)", fontSize:18, fontWeight:700, cursor:"pointer", ...mono, transition:"all 0.15s" }}>{val}</button>
+        ))}
+      </div>
+      {value && <p style={{ fontSize:12, color:color, margin:"8px 0 0", fontFamily:"Georgia,serif", fontStyle:"italic" }}>{labels[value]}</p>}
+    </div>
+  );
+}
+
+function NumericQuestion({ id, label, unit, value, onValue }) {
+  return (
+    <div style={{ marginBottom:28 }}>
+      <p style={{ fontSize:15, color:"rgba(255,255,255,0.92)", margin:"0 0 10px", lineHeight:1.7, ...serif }}>{label}</p>
+      <div style={{ display:"flex", alignItems:"center", gap:10 }}>
+        <input type="number" min="0" value={value||""} onChange={e => onValue(id, e.target.value)} placeholder="Enter number" style={{ ...inputStyle, width:160 }} />
+        {unit && <span style={{ fontSize:13, color:"rgba(255,255,255,0.5)", fontFamily:"Georgia,serif" }}>{unit}</span>}
+      </div>
+    </div>
+  );
+}
+
+function TextQuestion({ id, label, placeholder, value, onValue }) {
+  return (
+    <div style={{ marginBottom:28 }}>
+      <p style={{ fontSize:15, color:"rgba(255,255,255,0.92)", margin:"0 0 10px", lineHeight:1.7, ...serif }}>{label}</p>
+      <textarea value={value||""} onChange={e => onValue(id, e.target.value)} placeholder={placeholder||"Your answer..."} style={textareaStyle} rows={3} />
+    </div>
+  );
+}
+
+function ShortTextQuestion({ id, label, placeholder, value, onValue }) {
+  return (
+    <div style={{ marginBottom:28 }}>
+      <p style={{ fontSize:15, color:"rgba(255,255,255,0.92)", margin:"0 0 10px", lineHeight:1.7, ...serif }}>{label}</p>
+      <input value={value||""} onChange={e => onValue(id, e.target.value)} placeholder={placeholder||"Your answer..."} style={inputStyle} />
+    </div>
+  );
+}
+
+const SECTIONS = [
+  { id:"context", label:"Your Role", color:C.teal, tag:"About You",
+    desc:"This section is completely anonymous. We just need to understand your role and how long you've been with the company.",
+    questions:[
+      { id:"t_role", type:"short", label:"What is your role or department area?", placeholder:"e.g. estimating, sales, shop floor, admin, management" },
+      { id:"t_tenure", type:"choice", label:"How long have you been with the company?", options:[{ value:"under1",label:"A",text:"Less than 1 year"},{ value:"1to3",label:"B",text:"1–3 years"},{ value:"3to7",label:"C",text:"3–7 years"},{ value:"over7",label:"D",text:"7+ years"}] },
+    ]
   },
-  {
-    id: "workflow", label: "Daily Workflow", color: C.purple, tag: "Section 1",
-    intro: "How you experience your day-to-day work - what helps, what slows you down, and where things fall apart.",
-    questions: [
-      { id: "w1", type: "textarea", label: "When you start a new day, how clear are your priorities?", placeholder: "Do you always know what to work on, or does it feel unclear or constantly changing?" },
-      { id: "w2", type: "textarea", label: "What is the single biggest time-waster in your week?", placeholder: "The task, process, or situation that eats your time without adding value..." },
-      { id: "w3", type: "textarea", label: "Describe a process that breaks down regularly. What happens and why?", placeholder: "A handoff that fails, a step that always causes problems, a system that does not work..." },
-      { id: "w4", type: "textarea", label: "How often do handoffs between you and other departments fail or slow you down?", placeholder: "Between sales and ops, between estimating and purchasing, between any two teams..." },
-    ],
+  { id:"workflow", label:"Workflow", color:C.purple, tag:"Day-to-Day Operations",
+    desc:"These questions are about how your work actually flows — not how it's supposed to work, but how it actually works.",
+    questions:[
+      { id:"TW1", type:"number", label:"Roughly how many hours per week do you spend on tasks that feel like they should be handled by a system or automated?", unit:"hours/week" },
+      { id:"TW2", type:"choice", label:"When your priorities change during the day, how do you find out?", options:[{ value:"system",label:"A",text:"A system or tool alerts me automatically"},{ value:"told",label:"B",text:"Someone tells me directly"},{ value:"figure",label:"C",text:"I figure it out when something's late or wrong"},{ value:"varies",label:"D",text:"It varies — there's no consistent way"}] },
+      { id:"TW3", type:"rating", label:"How often do handoffs between you and other departments, teams, or people cause delays or errors? (1 = constantly causes problems, 5 = always smooth)", color:C.purple },
+      { id:"TW4", type:"text", label:"Describe a process in your work that breaks down regularly. What happens and why?", placeholder:"Be specific — what actually goes wrong and what does it cost in time or quality?" },
+      { id:"TW5", type:"text", label:"What is the single biggest time-waster in your week? Why does it still exist?", placeholder:"Be direct — what task should not require as much time as it does?" },
+    ]
   },
-  {
-    id: "info", label: "Information & Tools", color: C.teal, tag: "Section 2",
-    intro: "What information you need to do your job well, and whether you actually have it when you need it.",
-    questions: [
-      { id: "i1", type: "textarea", label: "How easy is it to find the information you need to do your job?", placeholder: "Pricing, specs, job status, customer info - what is easy to find and what requires hunting?" },
-      { id: "i2", type: "textarea", label: "What information do you wish you had easier access to?", placeholder: "If you could look something up in 10 seconds that currently takes 10 minutes, what would it be?" },
-      { id: "i3", type: "textarea", label: "If you could have one tool or system you do not have now, what would it be?", placeholder: "A dashboard, a lookup tool, a better process, an automated notification..." },
-      { id: "i4", type: "select", label: "How well does the current technology you use support the way you actually work?", options: ["It actively helps me", "It is okay - some things work, some do not", "It mostly gets in the way", "I work around it most of the time"] },
-    ],
+  { id:"info", label:"Information & Tools", color:C.amber, tag:"Info & Technology",
+    desc:"These questions are about whether you have the information and tools you need to do your job well.",
+    questions:[
+      { id:"TI1", type:"rating", label:"How easy is it to find the information you need to do your job? (1 = very hard, always hunting, 5 = always available immediately)", color:C.amber },
+      { id:"TI2", type:"number", label:"How many different systems, tools, or apps do you use regularly to do your job?", unit:"systems" },
+      { id:"TI3", type:"choice", label:"When you need information from another department, how long does it typically take to get it?", options:[{ value:"instant",label:"A",text:"Instantly — it's in a shared system"},{ value:"hour",label:"B",text:"Within an hour"},{ value:"sameday",label:"C",text:"Same day, but I have to ask"},{ value:"longer",label:"D",text:"Longer — it often takes multiple follow-ups"}] },
+      { id:"TI4", type:"text", label:"If you could have one tool or system you don't have right now, what would it be and what would it do?", placeholder:"Describe what it would do, not just what it's called." },
+    ]
   },
-  {
-    id: "customer", label: "Customer Experience", color: C.amber, tag: "Section 3",
-    intro: "How operational gaps show up in customer interactions from your vantage point.",
-    questions: [
-      { id: "cx1", type: "textarea", label: "What is the most common complaint or frustration you hear from customers?", placeholder: "Turnaround time, pricing accuracy, communication, order issues, response speed..." },
-      { id: "cx2", type: "textarea", label: "When a customer has a question you cannot answer immediately, what does that process look like?", placeholder: "Who do you have to ask, how long does it take, how does the customer respond?" },
-      { id: "cx3", type: "select", label: "How confident are you in the accuracy of the information you give customers?", options: ["Very confident - I trust the data I have", "Mostly confident - occasionally I find errors after the fact", "Somewhat confident - I double-check a lot", "Not very confident - I know the data has gaps"] },
-    ],
+  { id:"customer", label:"Customer Impact", color:C.teal, tag:"Customer Experience",
+    desc:"These questions are about how operational issues affect the customer experience from your vantage point.",
+    questions:[
+      { id:"TC1", type:"rating", label:"How often do operational issues affect the customer experience from your position? (1 = constantly, customers notice regularly, 5 = rarely, we catch problems before they do)", color:C.teal },
+      { id:"TC2", type:"choice", label:"When a customer problem comes up, how quickly is it typically resolved?", options:[{ value:"sameday",label:"A",text:"Same day — we have a clear process"},{ value:"1to2",label:"B",text:"1–2 days"},{ value:"several",label:"C",text:"Several days — it takes coordination"},{ value:"varies",label:"D",text:"It varies widely depending on who handles it"}] },
+      { id:"TC3", type:"text", label:"What is the most common customer complaint or frustration you see from your position?", placeholder:"What do customers say, or what do you see that you know is affecting their experience?" },
+    ]
   },
-  {
-    id: "open", label: "Open Feedback", color: C.purple, tag: "Section 4",
-    intro: "This is your chance to say what leadership should hear. There are no wrong answers.",
-    questions: [
-      { id: "o1", type: "textarea", label: "If you could change one thing about how this operation runs, what would it be?", placeholder: "Be direct. What one change would make the biggest difference to you and your team?" },
-      { id: "o2", type: "textarea", label: "What does this company do really well that we should protect?", placeholder: "What works, what you value, what would be a mistake to change..." },
-      { id: "o3", type: "textarea", label: "Is there anything important that leadership should know but probably does not?", placeholder: "This is anonymous - say what needs to be said..." },
-    ],
+  { id:"open", label:"Open Feedback", color:C.purple, tag:"Your Perspective",
+    desc:"This is your space. There are no wrong answers and this is completely anonymous. Say what you actually think.",
+    questions:[
+      { id:"TO1", type:"text", label:"If you could change one thing about how this operation runs, what would it be?", placeholder:"Be specific — what would you change first and what would it improve?" },
+      { id:"TO2", type:"text", label:"What does leadership not know about the day-to-day that you wish they understood?", placeholder:"What's the gap between how things look from the top and how they actually work?" },
+      { id:"TO3", type:"rating", label:"How consistent is work quality when different people are handling the same tasks? (1 = wildly inconsistent, 5 = same result every time regardless of who does it)", color:C.purple },
+      { id:"TO4", type:"text", label:"What is working well that you would not want to see change?", placeholder:"What should the business keep doing exactly as it is?" },
+    ]
   },
 ];
 
-async function submitTeamDiagnostic(token, answers) {
-  try {
-    await fetch(SHEETS_WEBHOOK, {
-      method: "POST",
-      mode: "no-cors",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ action: "submitTeamDiagnostic", token, answers, timestamp: new Date().toISOString() }),
-    });
-    return true;
-  } catch (e) {
-    return false;
-  }
+async function validateToken(token) {
+  try { const r = await fetch(`${WEBHOOK}?action=validateToken&token=${encodeURIComponent(token)}&type=team`); return await r.json(); }
+  catch { return { valid:false, message:"Connection error. Please try again." }; }
 }
 
-export default function TeamDiagnosticPage({ token: propToken }) {
-  const [token, setToken] = useState(propToken || "");
-  const [tokenValid, setTokenValid] = useState(false);
-  const [tokenChecking, setTokenChecking] = useState(true);
-  const [tokenError, setTokenError] = useState("");
-  const [step, setStep] = useState(0);
+async function submitDiagnostic(payload) {
+  try { await fetch(WEBHOOK, { method:"POST", mode:"no-cors", headers:{"Content-Type":"application/json"}, body:JSON.stringify({ action:"submitTeamDiagnostic", data:payload }) }); return true; }
+  catch { return false; }
+}
+
+export default function TeamDiagnosticPage({ setPage }) {
+  const [stage, setStage] = useState("validating");
+  const [tokenData, setTokenData] = useState(null);
+  const [token, setToken] = useState("");
   const [answers, setAnswers] = useState({});
-  const [submitting, setSubmitting] = useState(false);
-  const totalSections = sections.length;
+  const [currentSection, setCurrentSection] = useState(0);
+  const [error, setError] = useState("");
 
   useEffect(() => {
-    if (propToken && propToken.trim()) {
-      validateToken(propToken.trim());
-    } else {
-      setTokenChecking(false);
-      setTokenError("No team token found. Please use the complete link from your email.");
-    }
-  }, [propToken]);
+    const p = new URLSearchParams(window.location.search);
+    const t = p.get("token");
+    if (t) { setToken(t); runValidation(t); }
+    else { setStage("invalid"); setError("No access token found. Please use the exact link your employer forwarded to you."); }
+  }, []);
 
-  useEffect(() => { window.scrollTo({ top: 0, behavior: "smooth" }); }, [step]);
-
-  async function validateToken(t) {
-    setTokenChecking(true);
-    try {
-      const res = await fetch(SHEETS_WEBHOOK + "?action=validateToken&token=" + encodeURIComponent(t) + "&type=team");
-      const data = await res.json();
-      if (data.valid) { setToken(t); setTokenValid(true); setStep(1); }
-      else { setTokenError(data.message || "This team link is no longer active or has expired."); }
-    } catch (e) {
-      setToken(t); setTokenValid(true); setStep(1);
-    }
-    setTokenChecking(false);
+  async function runValidation(t) {
+    setStage("validating");
+    const r = await validateToken(t.toUpperCase().trim());
+    if (r.valid) { setTokenData(r); setStage("intro"); }
+    else { setError(r.message || "Invalid token."); setStage("invalid"); }
   }
 
-  function setAnswer(qId, value) { setAnswers(a => ({ ...a, [qId]: value })); }
+  const setAnswer = useCallback((id, val) => setAnswers(prev => ({ ...prev, [id]:val })), []);
 
-  const currentSection = sections[step - 1];
-  const isSectionComplete = (sec) => sec && sec.questions.every(q => answers[q.id] && String(answers[q.id]).trim().length > 0);
+  function qAnswered(q) {
+    if (q.id === "TO4") return true;
+    const v = answers[q.id];
+    if (q.type === "text" || q.type === "short") return v && v.trim().length >= 2;
+    return v !== undefined && v !== null && v !== "";
+  }
+
+  function secComplete(sec) { return sec.questions.every(q => qAnswered(q)); }
+
+  function totalAnswered() { return SECTIONS.reduce((sum,s) => sum + s.questions.filter(q => qAnswered(q)).length, 0); }
+  function totalQs() { return SECTIONS.reduce((sum,s) => sum + s.questions.length, 0); }
+
+  function renderQ(q) {
+    const p = { id:q.id, value:answers[q.id], onValue:setAnswer };
+    switch(q.type) {
+      case "choice": return <MultipleChoiceQuestion key={q.id} label={q.label} options={q.options} {...p} />;
+      case "rating": return <RatingQuestion key={q.id} label={q.label} color={q.color||C.teal} {...p} />;
+      case "number": return <NumericQuestion key={q.id} label={q.label} unit={q.unit} {...p} />;
+      case "text":   return <TextQuestion key={q.id} label={q.label} placeholder={q.placeholder} {...p} />;
+      case "short":  return <ShortTextQuestion key={q.id} label={q.label} placeholder={q.placeholder} {...p} />;
+      default: return null;
+    }
+  }
 
   async function handleSubmit() {
-    setSubmitting(true);
-    await submitTeamDiagnostic(token, answers);
-    setSubmitting(false);
-    setStep(totalSections + 2);
+    setStage("submitting");
+    await submitDiagnostic({ diagId:tokenData.diagId, company:tokenData.company, token, timestamp:new Date().toISOString(), anonymous:true, TW1_hours:answers["TW1"], TI2_systems:answers["TI2"], TW3_rating:answers["TW3"], TC1_rating:answers["TC1"], TO3_rating:answers["TO3"], ...answers });
+    setStage("done");
   }
 
-  const inputBase = { background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.15)", borderRadius: 8, padding: "12px 16px", color: C.white, fontSize: 15, width: "100%", boxSizing: "border-box", outline: "none", ...serif, transition: "border-color 0.2s" };
-  const textareaBase = { ...inputBase, minHeight: 90, resize: "vertical", lineHeight: 1.7 };
+  const pulse = `@keyframes vn{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.4;transform:scale(.8)}}`;
 
-  if (tokenChecking) return (
-    <div style={{ background: C.bg, minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center" }}>
-      <div style={{ textAlign: "center" }}>
-        <div style={{ width: 8, height: 8, borderRadius: "50%", background: C.teal, margin: "0 auto 16px" }} />
-        <p style={{ ...mono, fontSize: 13, color: "rgba(255,255,255,0.4)", letterSpacing: 2 }}>Validating access...</p>
+  if (stage === "validating") return <div style={{ background:C.bg, minHeight:"100vh", display:"flex", alignItems:"center", justifyContent:"center" }}><div style={{ textAlign:"center" }}><div style={{ width:10, height:10, borderRadius:"50%", background:C.teal, margin:"0 auto 20px", animation:"vn 1s ease-in-out infinite" }} /><p style={{ ...mono, fontSize:13, color:"rgba(255,255,255,0.5)", letterSpacing:2 }}>VALIDATING ACCESS LINK...</p><style>{pulse}</style></div></div>;
+
+  if (stage === "invalid") return (
+    <div style={{ background:C.bg, minHeight:"100vh", display:"flex", alignItems:"center", justifyContent:"center", padding:24 }}>
+      <div style={{ maxWidth:480, width:"100%", textAlign:"center" }}>
+        <Pill text="Access Error" color={C.red} />
+        <h2 style={{ fontFamily:"Georgia,serif", fontSize:26, fontWeight:900, margin:"20px 0 12px", color:"#F0F4FF" }}>Link Not Valid</h2>
+        <p style={{ fontSize:15, color:"rgba(255,255,255,0.65)", fontFamily:"Georgia,serif", lineHeight:1.7, marginBottom:24 }}>{error}</p>
+        <p style={{ fontSize:13, color:"rgba(255,255,255,0.4)", fontFamily:"Georgia,serif" }}>Please use the exact link forwarded to you, or contact <a href="mailto:connect@vaultneuron.com" style={{ color:C.teal }}>connect@vaultneuron.com</a>.</p>
       </div>
     </div>
   );
 
-  if (!tokenValid) return (
-    <div style={{ background: C.bg, minHeight: "100vh", color: C.white, display: "flex", alignItems: "center", justifyContent: "center", padding: "100px clamp(20px,5vw,60px)" }}>
-      <div style={{ maxWidth: 480, width: "100%", textAlign: "center" }}>
-        <Pill text="Link Error" color="#EF4444" />
-        <h1 style={{ ...serif, fontSize: "clamp(22px,3vw,32px)", fontWeight: 900, margin: "20px 0 12px", color: C.white }}>Unable to Load Diagnostic</h1>
-        <div style={{ background: "#EF444410", border: "1px solid #EF444430", borderRadius: 10, padding: "20px 24px", marginBottom: 24 }}>
-          <p style={{ ...serif, fontSize: 15, color: "rgba(255,255,255,0.75)", lineHeight: 1.8, margin: 0 }}>{tokenError}</p>
-        </div>
-        <p style={{ ...mono, fontSize: 12, color: "rgba(255,255,255,0.4)", letterSpacing: 1 }}>
-          Questions? <a href="mailto:connect@vaultneuron.com" style={{ color: C.teal, textDecoration: "none" }}>connect@vaultneuron.com</a>
-        </p>
-      </div>
-    </div>
-  );
-
-  if (step === 0) return (
-    <div style={{ background: C.bg, minHeight: "100vh", color: C.white, display: "flex", alignItems: "center", justifyContent: "center", padding: "100px clamp(20px,5vw,60px)" }}>
-      <div style={{ maxWidth: 600, width: "100%", textAlign: "center" }}>
-        <Pill text="Team Diagnostic" color={C.teal} />
-        <h1 style={{ ...serif, fontSize: "clamp(24px,3.5vw,40px)", fontWeight: 900, margin: "20px 0 16px", color: C.white, lineHeight: 1.2 }}>Your perspective matters.</h1>
-        <p style={{ ...serif, fontSize: 16, color: "rgba(255,255,255,0.75)", lineHeight: 1.85, margin: "0 auto 36px", maxWidth: 480 }}>
-          Your company has engaged Vault Neuron to improve how the operation runs. Your honest feedback as someone doing the work every day is the most valuable input we can have.
-        </p>
-        <div style={{ background: C.panel, border: "1px solid " + C.teal + "33", borderRadius: 12, padding: 32, marginBottom: 32, textAlign: "left" }}>
-          <div style={{ display: "flex", gap: 16, marginBottom: 24, flexWrap: "wrap" }}>
-            {[["5", "Sections"], ["~15", "Minutes"], ["100%", "Anonymous"]].map(([n, l]) => (
-              <div key={n} style={{ flex: 1, minWidth: 80, textAlign: "center", background: "rgba(255,255,255,0.05)", borderRadius: 8, padding: "14px 8px", border: "1px solid rgba(255,255,255,0.1)" }}>
-                <div style={{ fontSize: 22, fontWeight: 900, color: C.teal, ...mono }}>{n}</div>
-                <div style={{ fontSize: 12, color: "rgba(255,255,255,0.55)", ...serif, marginTop: 4 }}>{l}</div>
-              </div>
-            ))}
-          </div>
-          <div style={{ background: C.teal + "10", border: "1px solid " + C.teal + "30", borderRadius: 8, padding: "14px 18px" }}>
-            <div style={{ ...mono, fontSize: 11, color: C.teal, letterSpacing: 2, textTransform: "uppercase", marginBottom: 8 }}>Important</div>
-            <p style={{ ...serif, fontSize: 14, color: "rgba(255,255,255,0.78)", lineHeight: 1.7, margin: 0 }}>Your responses are completely anonymous. No names are attached. Individual answers will not be shared with management - only aggregated themes are reviewed. Please be honest.</p>
-          </div>
-        </div>
-        <button onClick={() => setStep(1)} style={{ background: "linear-gradient(135deg, " + C.teal + ", " + C.purple + ")", border: "none", borderRadius: 8, padding: "14px 36px", color: "#fff", fontSize: 14, cursor: "pointer", ...mono, fontWeight: 700, letterSpacing: 1.5, textTransform: "uppercase", boxShadow: "0 0 30px " + C.teal + "33" }}>Begin Team Diagnostic</button>
-      </div>
-    </div>
-  );
-
-  if (step === totalSections + 2) return (
-    <div style={{ background: C.bg, minHeight: "100vh", color: C.white, display: "flex", alignItems: "center", justifyContent: "center", padding: "100px clamp(20px,5vw,60px)" }}>
-      <div style={{ maxWidth: 540, width: "100%", textAlign: "center" }}>
-        <Pill text="Response Submitted" color={C.green} />
-        <h1 style={{ ...serif, fontSize: "clamp(22px,3vw,36px)", fontWeight: 900, margin: "20px 0 16px", color: C.white }}>Thank You</h1>
-        <p style={{ ...serif, fontSize: 16, color: "rgba(255,255,255,0.75)", lineHeight: 1.85, margin: "0 auto 32px", maxWidth: 420 }}>Your response has been recorded and will be included in the operational analysis along with other team responses.</p>
-        <div style={{ background: C.panel, border: "1px solid rgba(255,255,255,0.1)", borderRadius: 10, padding: "20px 24px" }}>
-          <p style={{ ...serif, fontSize: 14, color: "rgba(255,255,255,0.65)", lineHeight: 1.7, margin: 0 }}>Your answers are anonymous and will only be reviewed as part of the full team picture. Thank you for taking the time to share your perspective.</p>
-        </div>
-      </div>
-    </div>
-  );
-
-  if (step === totalSections + 1) return (
-    <div style={{ background: C.bg, minHeight: "100vh", color: C.white, padding: "100px clamp(20px,5vw,60px) 80px" }}>
-      <div style={{ maxWidth: 720, margin: "0 auto" }}>
-        <div style={{ textAlign: "center", marginBottom: 48 }}>
-          <Pill text="Review & Submit" color={C.teal} />
-          <h2 style={{ ...serif, fontSize: "clamp(22px,3vw,34px)", fontWeight: 900, margin: "20px 0 12px", color: C.white }}>Review your responses</h2>
-        </div>
-        {sections.map((sec, si) => (
-          <div key={sec.id} style={{ background: C.panel, border: "1px solid " + sec.color + "33", borderRadius: 10, padding: "20px 24px", marginBottom: 12 }}>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
-              <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                <Pill text={sec.tag} color={sec.color} />
-                <span style={{ ...serif, fontSize: 14, fontWeight: 700, color: C.white }}>{sec.label}</span>
-              </div>
-              <button onClick={() => setStep(si + 1)} style={{ background: "transparent", border: "1px solid " + sec.color + "44", borderRadius: 6, padding: "5px 12px", color: sec.color, fontSize: 11, cursor: "pointer", ...mono, letterSpacing: 1 }}>Edit</button>
-            </div>
-            {sec.questions.map(q => (
-              <div key={q.id} style={{ marginBottom: 8, paddingBottom: 8, borderBottom: "1px solid rgba(255,255,255,0.05)" }}>
-                <div style={{ ...mono, fontSize: 10, color: "rgba(255,255,255,0.35)", marginBottom: 3 }}>{q.label}</div>
-                <div style={{ ...serif, fontSize: 13, color: answers[q.id] ? "rgba(255,255,255,0.8)" : "rgba(255,255,255,0.2)", lineHeight: 1.5 }}>{answers[q.id] || "Not answered"}</div>
-              </div>
-            ))}
-          </div>
-        ))}
-        <div style={{ display: "flex", gap: 16, justifyContent: "center", marginTop: 32, flexWrap: "wrap" }}>
-          <button onClick={() => setStep(totalSections)} style={{ background: "transparent", border: "1px solid rgba(255,255,255,0.2)", borderRadius: 8, padding: "13px 24px", color: "rgba(255,255,255,0.75)", fontSize: 13, cursor: "pointer", ...mono, letterSpacing: 1 }}>Back</button>
-          <button onClick={handleSubmit} disabled={submitting} style={{ background: submitting ? "rgba(255,255,255,0.08)" : "linear-gradient(135deg, " + C.teal + ", " + C.purple + ")", border: "none", borderRadius: 8, padding: "13px 36px", color: submitting ? "rgba(255,255,255,0.4)" : "#fff", fontSize: 13, cursor: submitting ? "not-allowed" : "pointer", ...mono, fontWeight: 700, letterSpacing: 1.5, textTransform: "uppercase" }}>{submitting ? "Submitting..." : "Submit Response"}</button>
-        </div>
-      </div>
-    </div>
-  );
-
-  const progress = ((step - 1) / totalSections) * 100;
-  const sectionComplete = isSectionComplete(currentSection);
-
-  return (
-    <div style={{ background: C.bg, minHeight: "100vh", color: C.white, padding: "100px clamp(20px,5vw,60px) 80px" }}>
-      <div style={{ maxWidth: 720, margin: "0 auto" }}>
-        <div style={{ marginBottom: 40 }}>
-          <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 10 }}>
-            <span style={{ ...mono, fontSize: 12, color: "rgba(255,255,255,0.5)", letterSpacing: 2 }}>SECTION {step} OF {totalSections}</span>
-            <span style={{ ...mono, fontSize: 12, color: "rgba(255,255,255,0.5)" }}>{Math.round(progress)}% complete</span>
-          </div>
-          <div style={{ height: 4, background: "rgba(255,255,255,0.08)", borderRadius: 2 }}>
-            <div style={{ height: "100%", width: progress + "%", background: "linear-gradient(90deg, " + C.teal + ", " + C.purple + ")", borderRadius: 2, transition: "width 0.4s" }} />
-          </div>
-          <div style={{ display: "flex", gap: 4, marginTop: 8 }}>
-            {sections.map((s, i) => <div key={s.id} style={{ flex: 1, height: 3, borderRadius: 2, background: i < step - 1 ? s.color : i === step - 1 ? s.color + "88" : "rgba(255,255,255,0.08)", transition: "background 0.3s" }} />)}
-          </div>
-        </div>
-
-        <div style={{ marginBottom: 32 }}>
-          <Pill text={currentSection.tag} color={currentSection.color} />
-          <h2 style={{ ...serif, fontSize: "clamp(20px,3vw,28px)", fontWeight: 900, margin: "16px 0 8px", color: C.white }}>{currentSection.label}</h2>
-          <p style={{ ...mono, fontSize: 13, color: "rgba(255,255,255,0.5)", lineHeight: 1.6, margin: 0 }}>{currentSection.intro}</p>
-        </div>
-
-        <div style={{ display: "flex", flexDirection: "column", gap: 18, marginBottom: 40 }}>
-          {currentSection.questions.map((q, qi) => (
-            <div key={q.id} style={{ background: answers[q.id] ? "rgba(255,255,255,0.05)" : C.panel, border: "1px solid " + (answers[q.id] ? currentSection.color + "55" : "rgba(255,255,255,0.1)"), borderRadius: 10, padding: "22px 26px", transition: "border-color 0.2s" }}>
-              <label style={{ display: "block", ...serif, fontSize: 15, color: "rgba(255,255,255,0.9)", fontWeight: 600, lineHeight: 1.5, marginBottom: 14 }}>
-                <span style={{ ...mono, fontSize: 11, color: currentSection.color, letterSpacing: 2, marginRight: 10, fontWeight: 700 }}>Q{qi + 1}</span>
-                {q.label}
-              </label>
-              {q.type === "select" ? (
-                <select value={answers[q.id] || ""} onChange={e => setAnswer(q.id, e.target.value)} style={{ ...inputBase, cursor: "pointer" }}>
-                  <option value="" disabled style={{ background: C.dark }}>Select an option...</option>
-                  {q.options.map(o => <option key={o} value={o} style={{ background: C.dark }}>{o}</option>)}
-                </select>
-              ) : (
-                <textarea value={answers[q.id] || ""} onChange={e => setAnswer(q.id, e.target.value)} placeholder={q.placeholder} style={{ ...textareaBase }}
-                  onFocus={e => { e.target.style.borderColor = currentSection.color + "88"; }}
-                  onBlur={e => { e.target.style.borderColor = answers[q.id] ? currentSection.color + "55" : "rgba(255,255,255,0.15)"; }}
-                />
-              )}
+  if (stage === "intro") return (
+    <div style={{ background:C.bg, minHeight:"100vh", display:"flex", alignItems:"center", justifyContent:"center", padding:"100px clamp(20px,5vw,60px)" }}>
+      <div style={{ maxWidth:640, width:"100%", textAlign:"center" }}>
+        <Pill text="Team Operational Diagnostic" color={C.teal} />
+        <h1 style={{ fontFamily:"Georgia,serif", fontSize:"clamp(26px,3.5vw,42px)", fontWeight:900, margin:"24px 0 20px", lineHeight:1.2, color:"#F0F4FF" }}>Your perspective matters.<br /><span style={{ background:`linear-gradient(135deg,${C.purple},${C.teal})`, WebkitBackgroundClip:"text", WebkitTextFillColor:"transparent" }}>This is 100% anonymous.</span></h1>
+        <p style={{ fontSize:16, color:"rgba(255,255,255,0.72)", fontFamily:"Georgia,serif", lineHeight:1.8, margin:"0 auto 32px", maxWidth:520 }}>Your employer has engaged Vault Neuron to analyze the operational architecture of <strong style={{ color:"#F0F4FF" }}>{tokenData?.company}</strong>. This diagnostic collects honest feedback from the team — not management — about how the operation actually works.</p>
+        <div style={{ background:C.panel, border:`1px solid ${C.border}`, borderRadius:12, padding:28, marginBottom:32, textAlign:"left" }}>
+          {[["100% Anonymous","Your name is never attached to your responses. Your employer receives summarized team insights, not individual answers."],["Honest answers help more","Responses that describe real friction are what produce the most useful analysis. Say what you actually think."],["Takes 10–15 minutes","Five sections covering your workflow, tools, customer experience, and open feedback."]].map(([t,b]) => (
+            <div key={t} style={{ display:"flex", gap:14, marginBottom:20 }}>
+              <div style={{ width:6, height:6, borderRadius:"50%", background:C.teal, flexShrink:0, marginTop:7 }} />
+              <div><div style={{ fontSize:14, fontWeight:800, color:"#F0F4FF", fontFamily:"Georgia,serif", marginBottom:4 }}>{t}</div><div style={{ fontSize:13, color:"rgba(255,255,255,0.65)", fontFamily:"Georgia,serif", lineHeight:1.65 }}>{b}</div></div>
             </div>
           ))}
         </div>
+        <button onClick={() => { setCurrentSection(0); setStage("section"); }} style={{ background:`linear-gradient(135deg,${C.purple},${C.teal})`, border:"none", borderRadius:8, padding:"14px 36px", color:"#fff", fontSize:14, cursor:"pointer", ...mono, fontWeight:700, letterSpacing:1.5, textTransform:"uppercase", boxShadow:`0 0 30px ${C.purple}44` }}>Begin Diagnostic →</button>
+      </div>
+    </div>
+  );
 
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-          <button onClick={() => setStep(s => Math.max(1, s - 1))} style={{ background: "transparent", border: "1px solid rgba(255,255,255,0.2)", borderRadius: 8, padding: "12px 24px", color: "rgba(255,255,255,0.75)", fontSize: 12, cursor: "pointer", ...mono, letterSpacing: 1 }}>Back</button>
-          <div>{!sectionComplete && <p style={{ ...serif, fontSize: 13, color: "rgba(255,255,255,0.4)", margin: 0 }}>Answer all questions to continue</p>}</div>
-          <button onClick={() => setStep(s => s + 1)} disabled={!sectionComplete} style={{ background: sectionComplete ? "linear-gradient(135deg, " + C.teal + ", " + C.purple + ")" : "rgba(255,255,255,0.06)", border: "none", borderRadius: 8, padding: "12px 28px", color: sectionComplete ? "#fff" : "rgba(255,255,255,0.3)", fontSize: 12, cursor: sectionComplete ? "pointer" : "not-allowed", ...mono, fontWeight: 700, letterSpacing: 1.5, textTransform: "uppercase", transition: "all 0.2s" }}>
-            {step === totalSections ? "Review Answers" : "Next Section"}
-          </button>
+  if (stage === "submitting") return <div style={{ background:C.bg, minHeight:"100vh", display:"flex", alignItems:"center", justifyContent:"center" }}><div style={{ textAlign:"center" }}><div style={{ width:10, height:10, borderRadius:"50%", background:C.teal, margin:"0 auto 20px", animation:"vn 1s ease-in-out infinite" }} /><p style={{ ...mono, fontSize:13, color:"rgba(255,255,255,0.5)", letterSpacing:2 }}>SUBMITTING RESPONSES...</p><style>{pulse}</style></div></div>;
+
+  if (stage === "done") return (
+    <div style={{ background:C.bg, minHeight:"100vh", display:"flex", alignItems:"center", justifyContent:"center", padding:24 }}>
+      <div style={{ maxWidth:520, width:"100%", textAlign:"center" }}>
+        <div style={{ fontSize:48, marginBottom:24 }}>◈</div>
+        <Pill text="Responses Received" color={C.green} />
+        <h2 style={{ fontFamily:"Georgia,serif", fontSize:"clamp(22px,3vw,34px)", fontWeight:900, margin:"20px 0 16px", color:"#F0F4FF" }}>Thank you.</h2>
+        <p style={{ fontSize:15, color:"rgba(255,255,255,0.7)", fontFamily:"Georgia,serif", lineHeight:1.75, margin:"0 auto 28px", maxWidth:400 }}>Your responses have been received and anonymized. Your feedback will be part of the team intelligence summary that Vault Neuron uses to build the Blueprint.</p>
+        <p style={{ fontSize:13, color:"rgba(255,255,255,0.35)", fontFamily:"Georgia,serif" }}>You can close this window.</p>
+      </div>
+    </div>
+  );
+
+  if (stage === "review") return (
+    <div style={{ background:C.bg, minHeight:"100vh", color:"#F0F4FF", display:"flex", alignItems:"center", justifyContent:"center", padding:"100px clamp(20px,5vw,60px)" }}>
+      <div style={{ maxWidth:560, width:"100%", textAlign:"center" }}>
+        <div style={{ fontSize:48, marginBottom:20 }}>◈</div>
+        <Pill text="Ready to Submit" color={C.teal} />
+        <h2 style={{ fontFamily:"Georgia,serif", fontSize:"clamp(22px,3vw,34px)", fontWeight:900, margin:"20px 0 16px", color:"#F0F4FF" }}>{totalAnswered()} of {totalQs()} questions answered.</h2>
+        <p style={{ fontSize:15, color:"rgba(255,255,255,0.7)", fontFamily:"Georgia,serif", lineHeight:1.75, margin:"0 auto 28px", maxWidth:420 }}>Your responses are ready to submit. They will be anonymized and included in the team intelligence analysis for {tokenData?.company}.</p>
+        <div style={{ background:C.panel, border:`1px solid ${C.border}`, borderRadius:10, padding:20, marginBottom:28, textAlign:"left" }}>
+          {SECTIONS.map(s => (
+            <div key={s.id} style={{ display:"flex", justifyContent:"space-between", alignItems:"center", padding:"8px 0", borderBottom:`1px solid ${C.border}` }}>
+              <div style={{ display:"flex", alignItems:"center", gap:10 }}>
+                <div style={{ width:6, height:6, borderRadius:"50%", background:s.color, flexShrink:0 }} />
+                <span style={{ fontSize:13, color:"rgba(255,255,255,0.8)", fontFamily:"Georgia,serif" }}>{s.label}</span>
+              </div>
+              <span style={{ ...mono, fontSize:11, color:C.teal }}>{s.questions.filter(q => qAnswered(q)).length}/{s.questions.length}</span>
+            </div>
+          ))}
+        </div>
+        <div style={{ display:"flex", gap:16, justifyContent:"center", flexWrap:"wrap" }}>
+          <button onClick={handleSubmit} style={{ background:`linear-gradient(135deg,${C.purple},${C.teal})`, border:"none", borderRadius:8, padding:"14px 32px", color:"#fff", fontSize:13, cursor:"pointer", ...mono, fontWeight:700, letterSpacing:1.5, textTransform:"uppercase", boxShadow:`0 0 30px ${C.purple}44` }}>Submit My Responses →</button>
+          <button onClick={() => { setCurrentSection(SECTIONS.length-1); setStage("section"); }} style={{ background:"transparent", border:"1px solid rgba(255,255,255,0.2)", borderRadius:8, padding:"14px 24px", color:"rgba(255,255,255,0.75)", fontSize:13, cursor:"pointer", ...mono, letterSpacing:1 }}>← Review Answers</button>
+        </div>
+      </div>
+    </div>
+  );
+
+  const sec = SECTIONS[currentSection];
+  const isLast = currentSection === SECTIONS.length - 1;
+  const complete = secComplete(sec);
+  const progress = (currentSection / SECTIONS.length) * 100;
+
+  return (
+    <div style={{ background:C.bg, minHeight:"100vh", color:"#F0F4FF", padding:"100px clamp(20px,5vw,60px) 60px" }}>
+      <div style={{ maxWidth:760, margin:"0 auto" }}>
+        <div style={{ marginBottom:40 }}>
+          <div style={{ display:"flex", justifyContent:"space-between", marginBottom:10 }}>
+            <span style={{ ...mono, fontSize:11, color:"rgba(255,255,255,0.5)", letterSpacing:2 }}>{sec.label.toUpperCase()}  ·  {currentSection+1} OF {SECTIONS.length}</span>
+            <span style={{ ...mono, fontSize:11, color:"rgba(255,255,255,0.4)" }}>{totalAnswered()}/{totalQs()} answered</span>
+          </div>
+          <div style={{ height:4, background:"rgba(255,255,255,0.08)", borderRadius:2 }}>
+            <div style={{ height:"100%", width:`${progress}%`, background:`linear-gradient(90deg,${C.purple},${C.teal})`, borderRadius:2, transition:"width 0.4s" }} />
+          </div>
+          <div style={{ display:"flex", gap:4, marginTop:8 }}>
+            {SECTIONS.map((s,i) => <div key={s.id} style={{ flex:1, height:2, borderRadius:1, background:i<=currentSection?s.color:"rgba(255,255,255,0.08)", transition:"background 0.3s" }} />)}
+          </div>
+        </div>
+
+        <div style={{ marginBottom:28 }}>
+          <Pill text={sec.tag} color={sec.color} />
+          <h2 style={{ fontFamily:"Georgia,serif", fontSize:"clamp(20px,3vw,30px)", fontWeight:900, margin:"16px 0 10px", color:"#F0F4FF" }}>{sec.label}</h2>
+          <p style={{ fontSize:14, color:"rgba(255,255,255,0.6)", fontFamily:"Georgia,serif", lineHeight:1.7, margin:0 }}>{sec.desc}</p>
+        </div>
+
+        <div style={{ background:C.panel, border:`1px solid ${C.border}`, borderRadius:12, padding:"28px 32px" }}>
+          {sec.questions.map(q => renderQ(q))}
+        </div>
+
+        <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginTop:28 }}>
+          <button onClick={() => { if(currentSection===0) setStage("intro"); else setCurrentSection(n=>n-1); }} style={{ background:"transparent", border:"1px solid rgba(255,255,255,0.2)", borderRadius:8, padding:"12px 24px", color:"rgba(255,255,255,0.75)", fontSize:12, cursor:"pointer", ...mono, letterSpacing:1 }}>← Back</button>
+          {!complete && <p style={{ fontSize:13, color:"rgba(255,255,255,0.4)", margin:0, fontFamily:"Georgia,serif" }}>Answer all required questions to continue</p>}
+          <button onClick={() => { if(isLast) setStage("review"); else setCurrentSection(n=>n+1); }} disabled={!complete} style={{ background:complete?`linear-gradient(135deg,${C.purple},${C.teal})`:"rgba(255,255,255,0.08)", border:"none", borderRadius:8, padding:"12px 28px", color:complete?"#fff":"rgba(255,255,255,0.3)", fontSize:12, cursor:complete?"pointer":"not-allowed", ...mono, fontWeight:700, letterSpacing:1.5, textTransform:"uppercase", boxShadow:complete?`0 0 24px ${C.teal}44`:"none", transition:"all 0.2s" }}>{isLast?"Review & Submit →":`Next: ${SECTIONS[currentSection+1]?.label} →`}</button>
         </div>
       </div>
     </div>
