@@ -132,6 +132,7 @@ export default function AssessmentPage({ setPage, onComplete }) {
     setSubmitting(true);
     const results = calcResults();
     await submitToSheets({
+      action: "submitAssessment",
       diagId: results.diagId,
       timestamp: new Date().toISOString(),
       name: results.name,
