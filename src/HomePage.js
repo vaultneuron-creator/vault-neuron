@@ -84,8 +84,8 @@ export default function HomePage({ setPage }) {
             Any operation running on broken architecture
           </h2>
           <p style={{ color: C.slate, fontSize: 15, lineHeight: 1.8, maxWidth: 660, margin: "0 auto", fontFamily: "'Georgia', serif" }}>
-            Industrial distributors, controls companies, service operations, and product businesses —
-            10 to 150 employees. Your people are excellent. Your products are real.
+            Industrial distributors, controls companies, service operations, and product businesses 
+             Your people are excellent. Your products are real.
             But somewhere between the systems, the spreadsheets, and the silence,
             your operation is leaking time, money, and momentum every day.
             The problem isn't your team. It's the architecture underneath them.
