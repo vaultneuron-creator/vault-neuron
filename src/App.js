@@ -10,48 +10,54 @@ import BlogPage from "./BlogPage";
 import { TermsPage, PrivacyPage } from "./LegalPages";
 
 /* ─────────────────────────────────────────────────────────────────────────────
-   GLOBAL STYLES
-   Injected once at the root. All page components inherit these.
-   Fonts:  Barlow Condensed (headlines) + Courier New (body/mono)
-   Grid:   Structural dot-grid background pattern — NOT a SaaS glow
-   Pulse:  SVG diagnostic line animation for signature visual element
-   Color:  Teal + purple as accent strokes, never as fills/gradients
+   GLOBAL STYLES — v3
+   Direction: Light industrial. Not AI startup. Not SaaS. Not consulting brochure.
+   Reference: process equipment spec sheets, machinery catalogs, technical manuals.
+
+   Background:  #F0EDE6 — warm bone/linen. Feels like heavy paper stock.
+   Ink:         #0F0F0F — near-black. Heavy. Credible.
+   Teal:        #0D8FAF — used as INK color, not glow. Headers, rules, labels.
+   Purple:      #5B3FD4 — true ink purple. Tags, secondary accents. Sparingly.
+   Dot grid:    #C8C2B6 dots on linen — reads as technical graph paper.
+   Typography:  Barlow Condensed 800/900 for headlines (massive, condensed, uppercase)
+                Courier New for body — precision instrument, not tech startup
 ───────────────────────────────────────────────────────────────────────────── */
 const GLOBAL_STYLES = `
   @import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:ital,wght@0,300;0,400;0,600;0,700;0,800;0,900;1,700;1,800&display=swap');
 
   :root {
-    /* ── Core palette ── */
-    --vn-black:       #0a0a0a;
-    --vn-near-black:  #0f0f0f;
-    --vn-surface:     #141414;
-    --vn-surface-2:   #1a1a1a;
-    --vn-border:      #262626;
-    --vn-border-mid:  #333333;
+    /* ── Surfaces ── */
+    --vn-bg:          #F0EDE6;
+    --vn-surface:     #E8E4DC;
+    --vn-surface-2:   #DDD8CF;
+    --vn-surface-3:   #D2CCC2;
 
-    /* ── Accents — used as strokes, rule lines, highlights ONLY ── */
-    --vn-teal:        #4db8e8;
-    --vn-teal-dim:    rgba(77, 184, 232, 0.18);
-    --vn-teal-rule:   rgba(77, 184, 232, 0.35);
-    --vn-purple:      #7b5cf5;
-    --vn-purple-dim:  rgba(123, 92, 245, 0.15);
-    --vn-purple-rule: rgba(123, 92, 245, 0.40);
-    --vn-amber:       #c8922a;
+    /* ── Ink hierarchy ── */
+    --vn-ink:         #0F0F0F;
+    --vn-ink-mid:     #3A3632;
+    --vn-ink-light:   #6B6560;
+    --vn-rule:        #C8C2B6;
+    --vn-rule-dark:   #A09990;
 
-    /* ── Text ── */
-    --vn-white:       #f4f4f4;
-    --vn-off-white:   #d4d4d4;
-    --vn-muted:       #737373;
-    --vn-faint:       #404040;
+    /* ── Accent inks — color, not glow ── */
+    --vn-teal:        #0D8FAF;
+    --vn-teal-mid:    #1AABCF;
+    --vn-teal-ink:    #094F61;
+    --vn-teal-wash:   rgba(13, 143, 175, 0.08);
+    --vn-purple:      #5B3FD4;
+    --vn-purple-mid:  #7B5CF5;
+    --vn-purple-wash: rgba(91, 63, 212, 0.07);
+    --vn-amber:       #A8620A;
+
+    /* ── Status ── */
+    --vn-green:       #1A6B3A;
+    --vn-red:         #B33A2A;
 
     /* ── Typography ── */
     --font-display:   'Barlow Condensed', 'Impact', sans-serif;
     --font-mono:      'Courier New', 'Courier', monospace;
 
-    /* ── Spacing grid ── */
-    --grid-unit:      8px;
-
-    /* ── Transitions ── */
+    /* ── Motion ── */
     --ease-snap:      cubic-bezier(0.16, 1, 0.3, 1);
   }
 
@@ -69,43 +75,63 @@ const GLOBAL_STYLES = `
   }
 
   body {
-    background: var(--vn-black);
-    color: var(--vn-off-white);
+    background: var(--vn-bg);
+    color: var(--vn-ink-mid);
     font-family: var(--font-mono);
     font-size: 14px;
-    line-height: 1.6;
+    line-height: 1.65;
     min-height: 100vh;
   }
 
-  /* ── Scrollbar ── */
-  ::-webkit-scrollbar { width: 4px; }
-  ::-webkit-scrollbar-track { background: var(--vn-black); }
-  ::-webkit-scrollbar-thumb { background: var(--vn-border-mid); }
-  ::-webkit-scrollbar-thumb:hover { background: var(--vn-teal-rule); }
+  /* ── Scrollbar — matches the linen background ── */
+  ::-webkit-scrollbar { width: 5px; }
+  ::-webkit-scrollbar-track { background: var(--vn-bg); }
+  ::-webkit-scrollbar-thumb { background: var(--vn-rule-dark); }
+  ::-webkit-scrollbar-thumb:hover { background: var(--vn-teal); }
 
   /* ── Selection ── */
   ::selection {
-    background: var(--vn-teal-dim);
-    color: var(--vn-white);
+    background: rgba(13, 143, 175, 0.18);
+    color: var(--vn-ink);
   }
 
-  /* ── Typography utilities ── */
-  .vn-display {
-    font-family: var(--font-display);
-    font-weight: 800;
-    line-height: 0.92;
-    letter-spacing: -0.01em;
-    text-transform: uppercase;
-    color: var(--vn-white);
+  /* ── Focus ── */
+  :focus-visible {
+    outline: 1px solid var(--vn-teal);
+    outline-offset: 2px;
   }
+  button:focus:not(:focus-visible) { outline: none; }
 
+  /* ────────────────────────────────────────────────────
+     TYPOGRAPHY UTILITIES
+  ──────────────────────────────────────────────────── */
+
+  /* Massive condensed display — the ONLY choice for H1 */
   .vn-display-xl {
     font-family: var(--font-display);
     font-weight: 900;
     line-height: 0.88;
     letter-spacing: -0.02em;
     text-transform: uppercase;
-    color: var(--vn-white);
+    color: var(--vn-ink);
+  }
+
+  .vn-display {
+    font-family: var(--font-display);
+    font-weight: 800;
+    line-height: 0.92;
+    letter-spacing: -0.01em;
+    text-transform: uppercase;
+    color: var(--vn-ink);
+  }
+
+  .vn-display-teal {
+    font-family: var(--font-display);
+    font-weight: 800;
+    line-height: 0.92;
+    letter-spacing: -0.01em;
+    text-transform: uppercase;
+    color: var(--vn-teal);
   }
 
   .vn-label {
@@ -113,7 +139,7 @@ const GLOBAL_STYLES = `
     font-size: 10px;
     letter-spacing: 0.2em;
     text-transform: uppercase;
-    color: var(--vn-muted);
+    color: var(--vn-ink-light);
   }
 
   .vn-label-teal {
@@ -127,11 +153,15 @@ const GLOBAL_STYLES = `
   .vn-body {
     font-family: var(--font-mono);
     font-size: 13px;
-    line-height: 1.75;
-    color: var(--vn-off-white);
+    line-height: 1.78;
+    color: var(--vn-ink-mid);
   }
 
-  /* ── Accent slash element ── */
+  /* ────────────────────────────────────────────────────
+     STRUCTURAL ELEMENTS
+  ──────────────────────────────────────────────────── */
+
+  /* 3px teal vertical slash — used before headings, list items */
   .vn-slash {
     display: inline-block;
     width: 3px;
@@ -149,89 +179,49 @@ const GLOBAL_STYLES = `
     flex-shrink: 0;
   }
 
-  /* ── Rule lines ── */
-  .vn-rule-teal {
-    border: none;
-    border-top: 1px solid var(--vn-teal-rule);
-    margin: 0;
+  /* Rule lines — warm, not cold gray */
+  .vn-rule        { border: none; border-top: 1px solid var(--vn-rule);      }
+  .vn-rule-dark   { border: none; border-top: 1px solid var(--vn-rule-dark); }
+  .vn-rule-teal   { border: none; border-top: 1px solid var(--vn-teal);      }
+  .vn-rule-purple { border: none; border-top: 1px solid var(--vn-purple);    }
+
+  /* Section index mark */
+  .vn-index-mark {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    letter-spacing: 0.15em;
+    color: var(--vn-rule-dark);
+    user-select: none;
   }
 
-  .vn-rule-purple {
-    border: none;
-    border-top: 1px solid var(--vn-purple-rule);
-    margin: 0;
-  }
-
-  .vn-rule-dim {
-    border: none;
-    border-top: 1px solid var(--vn-border);
-    margin: 0;
-  }
-
-  /* ── Grid background pattern — structural, not decorative glows ── */
-  .vn-grid-bg {
-    background-image:
-      radial-gradient(circle, var(--vn-border) 1px, transparent 1px);
-    background-size: 28px 28px;
-    background-position: 0 0;
-  }
-
-  /* ── Cross-hair corner marks ── */
-  .vn-corner-marks {
+  /* Corner-mark brackets for panels */
+  .vn-corner {
     position: relative;
   }
-  .vn-corner-marks::before,
-  .vn-corner-marks::after {
+  .vn-corner::before,
+  .vn-corner::after {
     content: '';
     position: absolute;
-    width: 12px;
-    height: 12px;
+    width: 14px;
+    height: 14px;
     pointer-events: none;
   }
-  .vn-corner-marks::before {
+  .vn-corner::before {
     top: 0; left: 0;
-    border-top: 1px solid var(--vn-teal-rule);
-    border-left: 1px solid var(--vn-teal-rule);
+    border-top: 1px solid var(--vn-teal);
+    border-left: 1px solid var(--vn-teal);
   }
-  .vn-corner-marks::after {
+  .vn-corner::after {
     bottom: 0; right: 0;
-    border-bottom: 1px solid var(--vn-teal-rule);
-    border-right: 1px solid var(--vn-teal-rule);
+    border-bottom: 1px solid var(--vn-teal);
+    border-right: 1px solid var(--vn-teal);
   }
 
-  /* ── Diagnostic pulse animation — signature visual element ── */
-  @keyframes vn-pulse-draw {
-    0%   { stroke-dashoffset: 1000; opacity: 0.3; }
-    30%  { opacity: 1; }
-    100% { stroke-dashoffset: 0; opacity: 0.6; }
-  }
-
-  @keyframes vn-pulse-scan {
-    0%   { transform: translateX(-100%); }
-    100% { transform: translateX(400%); }
-  }
-
-  @keyframes vn-blink {
-    0%, 100% { opacity: 1; }
-    50%       { opacity: 0; }
-  }
-
-  @keyframes vn-fade-up {
-    from { opacity: 0; transform: translateY(20px); }
-    to   { opacity: 1; transform: translateY(0); }
-  }
-
-  @keyframes vn-fade-in {
-    from { opacity: 0; }
-    to   { opacity: 1; }
-  }
-
-  @keyframes vn-slide-right {
-    from { transform: scaleX(0); transform-origin: left; }
-    to   { transform: scaleX(1); transform-origin: left; }
-  }
-
-  /* ── Button primitives ── */
+  /* ────────────────────────────────────────────────────
+     BUTTONS
+     Primary: solid teal, black text — high contrast on linen
+     Ghost:   ink border, ink text
+  ──────────────────────────────────────────────────── */
   .vn-btn-primary {
     display: inline-flex;
     align-items: center;
@@ -240,22 +230,21 @@ const GLOBAL_STYLES = `
     font-size: 11px;
     letter-spacing: 0.18em;
     text-transform: uppercase;
-    color: var(--vn-black);
+    font-weight: 700;
+    color: #FFFFFF;
     background: var(--vn-teal);
-    border: none;
+    border: 1px solid var(--vn-teal);
     padding: 14px 28px;
     cursor: pointer;
-    transition: background 0.15s var(--ease-snap), transform 0.12s;
-    font-weight: 600;
+    transition: background 0.14s var(--ease-snap), color 0.14s, transform 0.1s;
     clip-path: polygon(0 0, calc(100% - 8px) 0, 100% 8px, 100% 100%, 8px 100%, 0 calc(100% - 8px));
   }
   .vn-btn-primary:hover {
-    background: #6fd0ff;
+    background: var(--vn-teal-ink);
+    border-color: var(--vn-teal-ink);
     transform: translateY(-1px);
   }
-  .vn-btn-primary:active {
-    transform: translateY(0);
-  }
+  .vn-btn-primary:active { transform: translateY(0); }
 
   .vn-btn-ghost {
     display: inline-flex;
@@ -265,21 +254,23 @@ const GLOBAL_STYLES = `
     font-size: 11px;
     letter-spacing: 0.18em;
     text-transform: uppercase;
-    color: var(--vn-off-white);
+    color: var(--vn-ink);
     background: transparent;
-    border: 1px solid var(--vn-border-mid);
+    border: 1px solid var(--vn-ink);
     padding: 13px 27px;
     cursor: pointer;
-    transition: border-color 0.15s, color 0.15s, transform 0.12s;
+    transition: background 0.14s, color 0.14s, transform 0.1s;
     clip-path: polygon(0 0, calc(100% - 8px) 0, 100% 8px, 100% 100%, 8px 100%, 0 calc(100% - 8px));
   }
   .vn-btn-ghost:hover {
-    border-color: var(--vn-teal-rule);
-    color: var(--vn-teal);
+    background: var(--vn-ink);
+    color: var(--vn-bg);
     transform: translateY(-1px);
   }
 
-  /* ── Tag / badge ── */
+  /* ────────────────────────────────────────────────────
+     TAGS / BADGES
+  ──────────────────────────────────────────────────── */
   .vn-tag {
     display: inline-block;
     font-family: var(--font-mono);
@@ -287,22 +278,54 @@ const GLOBAL_STYLES = `
     letter-spacing: 0.22em;
     text-transform: uppercase;
     padding: 3px 10px;
-    border: 1px solid var(--vn-border-mid);
-    color: var(--vn-muted);
+    border: 1px solid var(--vn-rule-dark);
+    color: var(--vn-ink-light);
     background: transparent;
   }
+  .vn-tag-teal   { border-color: var(--vn-teal);   color: var(--vn-teal);   }
+  .vn-tag-purple { border-color: var(--vn-purple);  color: var(--vn-purple); }
+  .vn-tag-amber  { border-color: var(--vn-amber);   color: var(--vn-amber);  }
 
-  .vn-tag-teal {
-    border-color: var(--vn-teal-rule);
-    color: var(--vn-teal);
+  /* ────────────────────────────────────────────────────
+     PANELS & CARDS
+     On linen, panels use surface color + rule border.
+     Left-border accent lines replace all glow effects.
+  ──────────────────────────────────────────────────── */
+  .vn-panel {
+    background: var(--vn-surface);
+    border: 1px solid var(--vn-rule);
+    padding: clamp(24px, 3vw, 40px);
+    position: relative;
   }
 
-  .vn-tag-purple {
-    border-color: var(--vn-purple-rule);
-    color: var(--vn-purple);
+  .vn-panel-teal {
+    background: var(--vn-surface);
+    border: 1px solid var(--vn-rule);
+    border-left: 3px solid var(--vn-teal);
+    padding: clamp(24px, 3vw, 40px);
+    position: relative;
   }
 
-  /* ── Section containers ── */
+  .vn-panel-purple {
+    background: var(--vn-surface);
+    border: 1px solid var(--vn-rule);
+    border-left: 3px solid var(--vn-purple);
+    padding: clamp(24px, 3vw, 40px);
+    position: relative;
+  }
+
+  /* Inset/dark panel — used for call-out blocks */
+  .vn-panel-ink {
+    background: var(--vn-ink);
+    border: none;
+    padding: clamp(24px, 3vw, 40px);
+    position: relative;
+    color: var(--vn-bg);
+  }
+
+  /* ────────────────────────────────────────────────────
+     SECTION LAYOUT
+  ──────────────────────────────────────────────────── */
   .vn-section {
     padding: clamp(64px, 10vw, 120px) clamp(20px, 6vw, 80px);
   }
@@ -311,164 +334,105 @@ const GLOBAL_STYLES = `
     padding: clamp(40px, 6vw, 80px) clamp(20px, 6vw, 80px);
   }
 
-  /* ── Asymmetric content grid ── */
-  .vn-grid-asymmetric {
+  /* Asymmetric editorial grid */
+  .vn-grid-asym {
     display: grid;
-    grid-template-columns: 1fr 2fr;
+    grid-template-columns: 1fr 2.4fr;
     gap: clamp(32px, 5vw, 80px);
     align-items: start;
   }
 
-  .vn-grid-asymmetric-reverse {
+  .vn-grid-asym-r {
     display: grid;
-    grid-template-columns: 2fr 1fr;
+    grid-template-columns: 2.4fr 1fr;
     gap: clamp(32px, 5vw, 80px);
     align-items: start;
   }
 
-  .vn-grid-3col {
+  /* 3-column divider grid — panels touch, divided by 1px rule lines */
+  .vn-grid-3 {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
     gap: 1px;
-    background: var(--vn-border);
+    background: var(--vn-rule);
   }
+  .vn-grid-3 > * { background: var(--vn-surface); }
 
-  .vn-grid-3col > * {
-    background: var(--vn-near-black);
+  .vn-grid-2 {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1px;
+    background: var(--vn-rule);
   }
+  .vn-grid-2 > * { background: var(--vn-surface); }
 
   @media (max-width: 900px) {
-    .vn-grid-asymmetric,
-    .vn-grid-asymmetric-reverse {
-      grid-template-columns: 1fr;
-    }
-    .vn-grid-3col {
-      grid-template-columns: 1fr;
-    }
+    .vn-grid-asym, .vn-grid-asym-r { grid-template-columns: 1fr; }
+    .vn-grid-3 { grid-template-columns: 1fr; }
+    .vn-grid-2 { grid-template-columns: 1fr; }
   }
 
-  /* ── Panel / card — NO glow, NO gradient background ── */
-  .vn-panel {
-    background: var(--vn-surface);
-    border: 1px solid var(--vn-border);
-    padding: clamp(24px, 3vw, 40px);
-    position: relative;
+  /* ────────────────────────────────────────────────────
+     ANIMATIONS
+  ──────────────────────────────────────────────────── */
+  @keyframes vn-pulse-draw {
+    0%   { stroke-dashoffset: 1000; opacity: 0.2; }
+    30%  { opacity: 0.8; }
+    100% { stroke-dashoffset: 0; opacity: 0.55; }
   }
 
-  .vn-panel-accent {
-    background: var(--vn-surface);
-    border: 1px solid var(--vn-border);
-    border-left: 3px solid var(--vn-teal);
-    padding: clamp(24px, 3vw, 40px);
-    position: relative;
+  @keyframes vn-pulse-scan {
+    0%   { transform: translateX(-100%); }
+    100% { transform: translateX(400%); }
   }
 
-  .vn-panel-accent-purple {
-    background: var(--vn-surface);
-    border: 1px solid var(--vn-border);
-    border-left: 3px solid var(--vn-purple);
-    padding: clamp(24px, 3vw, 40px);
-    position: relative;
+  @keyframes vn-fade-up {
+    from { opacity: 0; transform: translateY(18px); }
+    to   { opacity: 1; transform: translateY(0); }
   }
 
-  /* ── Section number / index mark ── */
-  .vn-index-mark {
-    font-family: var(--font-mono);
-    font-size: 10px;
-    letter-spacing: 0.15em;
-    color: var(--vn-faint);
-    user-select: none;
+  @keyframes vn-slide-in {
+    from { transform: scaleX(0); transform-origin: left; }
+    to   { transform: scaleX(1); transform-origin: left; }
   }
 
-  /* ── Horizontal rule with label ── */
-  .vn-rule-labeled {
-    display: flex;
-    align-items: center;
-    gap: 16px;
-  }
-  .vn-rule-labeled::before {
-    content: '';
-    flex: 0 0 40px;
-    height: 1px;
-    background: var(--vn-teal-rule);
-  }
-  .vn-rule-labeled::after {
-    content: '';
-    flex: 1;
-    height: 1px;
-    background: var(--vn-border);
+  @keyframes vn-blink {
+    0%, 100% { opacity: 1; }
+    50%       { opacity: 0; }
   }
 
-  /* ── Print / accessibility ── */
   @media (prefers-reduced-motion: reduce) {
     *, *::before, *::after {
       animation-duration: 0.01ms !important;
       transition-duration: 0.01ms !important;
     }
   }
-
-  /* ── Focus visible ── */
-  :focus-visible {
-    outline: 1px solid var(--vn-teal);
-    outline-offset: 2px;
-  }
-  button:focus:not(:focus-visible) {
-    outline: none;
-  }
 `;
 
 /* ─────────────────────────────────────────────────────────────────────────────
-   DIAGNOSTIC PULSE SVG — signature visual, renders behind hero content
-   A single animated ECG-style waveform. Teal stroke, no glow filter.
+   DIAGNOSTIC PULSE SVG — signature visual element
+   On the linen background, teal stroke reads clearly as a hard ink line.
+   No glow filter. No blur. Just precise stroke on warm paper.
 ───────────────────────────────────────────────────────────────────────────── */
-export function DiagnosticPulse({ style = {}, color = "var(--vn-teal)", opacity = 0.45 }) {
+export function DiagnosticPulse({ style = {}, color = "#0D8FAF", opacity = 0.55 }) {
   return (
     <svg
       viewBox="0 0 800 80"
       preserveAspectRatio="none"
-      style={{
-        width: "100%",
-        height: 80,
-        display: "block",
-        overflow: "visible",
-        opacity,
-        ...style,
-      }}
+      style={{ width: "100%", height: 80, display: "block", overflow: "visible", opacity, ...style }}
       aria-hidden="true"
     >
       <polyline
         points="
-          0,40
-          80,40
-          110,40
-          120,10
-          135,70
-          150,20
-          165,60
-          180,40
-          220,40
-          240,40
-          260,15
-          275,65
-          290,22
-          305,58
-          320,40
-          400,40
-          430,40
-          445,5
-          460,75
-          475,18
-          490,62
-          505,40
-          560,40
-          590,40
-          605,25
-          618,55
-          632,30
-          645,50
-          660,40
-          720,40
-          800,40
+          0,40 80,40 110,40
+          120,10 135,70 150,20 165,60
+          180,40 220,40 240,40
+          260,15 275,65 290,22 305,58
+          320,40 400,40 430,40
+          445,5 460,75 475,18 490,62
+          505,40 560,40 590,40
+          605,25 618,55 632,30 645,50
+          660,40 720,40 800,40
         "
         fill="none"
         stroke={color}
@@ -478,22 +442,18 @@ export function DiagnosticPulse({ style = {}, color = "var(--vn-teal)", opacity 
         strokeDasharray="1000"
         strokeDashoffset="1000"
         style={{
-          animation: "vn-pulse-draw 2.4s var(--ease-snap, cubic-bezier(0.16,1,0.3,1)) 0.3s forwards",
+          animation: "vn-pulse-draw 2.4s cubic-bezier(0.16,1,0.3,1) 0.3s forwards",
         }}
       />
-      {/* Scan line */}
-      <rect
-        x="0" y="0"
-        width="40" height="80"
-        fill={`url(#pulse-scan-${color.replace(/[^a-z]/g, '')})`}
-        style={{
-          animation: "vn-pulse-scan 3s linear 0.5s infinite",
-        }}
+      {/* Scan glint */}
+      <rect x="0" y="0" width="40" height="80"
+        fill="url(#scan-grad)"
+        style={{ animation: "vn-pulse-scan 3.2s linear 0.6s infinite" }}
       />
       <defs>
-        <linearGradient id={`pulse-scan-${color.replace(/[^a-z]/g, '')}`} x1="0" x2="1" y1="0" y2="0">
+        <linearGradient id="scan-grad" x1="0" x2="1" y1="0" y2="0">
           <stop offset="0%"   stopColor={color} stopOpacity="0" />
-          <stop offset="50%"  stopColor={color} stopOpacity="0.15" />
+          <stop offset="50%"  stopColor={color} stopOpacity="0.2" />
           <stop offset="100%" stopColor={color} stopOpacity="0" />
         </linearGradient>
       </defs>
@@ -502,22 +462,23 @@ export function DiagnosticPulse({ style = {}, color = "var(--vn-teal)", opacity 
 }
 
 /* ─────────────────────────────────────────────────────────────────────────────
-   STRUCTURAL GRID BACKGROUND — renders as a fixed layer behind all content
-   Dot grid at 28px intervals. Subtle. Industrial. Not decorative.
+   STRUCTURAL GRID BACKGROUND
+   On linen: warm #C8C2B6 dots at 28px grid.
+   Reads as technical graph paper — industrial, calibrated, not decorative.
 ───────────────────────────────────────────────────────────────────────────── */
 function StructuralGrid() {
   return (
     <div
       aria-hidden="true"
       style={{
-        position: "fixed",
-        inset: 0,
-        zIndex: 0,
-        pointerEvents: "none",
-        backgroundImage: "radial-gradient(circle, #262626 1px, transparent 1px)",
-        backgroundSize: "28px 28px",
+        position:        "fixed",
+        inset:           0,
+        zIndex:          0,
+        pointerEvents:   "none",
+        backgroundImage: "radial-gradient(circle, #C8C2B6 1px, transparent 1px)",
+        backgroundSize:  "28px 28px",
         backgroundPosition: "0 0",
-        opacity: 0.5,
+        opacity:         0.55,
       }}
     />
   );
@@ -525,22 +486,16 @@ function StructuralGrid() {
 
 /* ─────────────────────────────────────────────────────────────────────────────
    APP ROOT
-   - Injects global styles once
-   - Renders the structural grid behind everything
-   - Manages all page routing state (unchanged from v1 logic)
-   - Passes setPage (aliased as `go`) down to all page components
 ───────────────────────────────────────────────────────────────────────────── */
 export default function App() {
-  const [page, setPage]       = useState("Home");
-  const [results, setResults] = useState(null);
+  const [page, setPage]           = useState("Home");
+  const [results, setResults]     = useState(null);
   const [articleId, setArticleId] = useState(null);
 
-  // Scroll to top on page change
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: "smooth" });
   }, [page]);
 
-  // Navigation handler — supports Article_ prefix routing
   const go = (p) => {
     if (p.startsWith("Article_")) {
       setArticleId(p.replace("Article_", ""));
@@ -551,48 +506,38 @@ export default function App() {
     }
   };
 
-  // Called when AssessmentPage completes
   const handleAssessmentComplete = (r) => {
     setResults(r);
     setPage("Results");
   };
 
-  // Assessment + Results are fullscreen — no nav/footer chrome
   const isFullscreen = page === "Assessment" || page === "Results";
 
   const renderPage = () => {
     switch (page) {
-      case "Home":       return <HomePage      setPage={go} />;
-      case "Solutions":  return <SolutionsPage setPage={go} />;
-      case "The Vault":  return <VaultPage     setPage={go} />;
-      case "About":      return <AboutPage     setPage={go} />;
+      case "Home":       return <HomePage       setPage={go} />;
+      case "Solutions":  return <SolutionsPage  setPage={go} />;
+      case "The Vault":  return <VaultPage      setPage={go} />;
+      case "About":      return <AboutPage      setPage={go} />;
       case "Assessment": return <AssessmentPage setPage={go} onComplete={handleAssessmentComplete} />;
       case "Results":    return <SystemInitializedPage results={results} setPage={go} />;
-      case "Article":    return <BlogPage      articleId={articleId} setPage={go} />;
-      case "Terms":      return <TermsPage     setPage={go} />;
-      case "Privacy":    return <PrivacyPage   setPage={go} />;
-      default:           return <HomePage      setPage={go} />;
+      case "Article":    return <BlogPage       articleId={articleId} setPage={go} />;
+      case "Terms":      return <TermsPage      setPage={go} />;
+      case "Privacy":    return <PrivacyPage    setPage={go} />;
+      default:           return <HomePage       setPage={go} />;
     }
   };
 
   return (
     <>
-      {/* ── Inject global styles once ── */}
       <style dangerouslySetInnerHTML={{ __html: GLOBAL_STYLES }} />
-
-      {/* ── Root shell ── */}
-      <div
-        style={{
-          background: "var(--vn-black)",
-          minHeight: "100vh",
-          position: "relative",
-          zIndex: 1,
-        }}
-      >
-        {/* Structural dot-grid background layer */}
+      <div style={{
+        background: "var(--vn-bg)",
+        minHeight:  "100vh",
+        position:   "relative",
+        zIndex:     1,
+      }}>
         <StructuralGrid />
-
-        {/* All content sits above the grid */}
         <div style={{ position: "relative", zIndex: 2 }}>
           {!isFullscreen && <Nav page={page} setPage={go} />}
           {renderPage()}
