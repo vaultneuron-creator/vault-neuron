@@ -8,6 +8,8 @@ import AssessmentPage from "./AssessmentPage";
 import SystemInitializedPage from "./SystemInitializedPage";
 import BlogPage from "./BlogPage";
 import { TermsPage, PrivacyPage } from "./LegalPages";
+import LeadershipDiagnosticPage from "./LeadershipDiagnosticPage";
+import TeamDiagnosticPage from "./TeamDiagnosticPage";
 
 /* ─────────────────────────────────────────────────────────────────────────────
    GLOBAL STYLES — v4
@@ -466,7 +468,17 @@ function StructuralGrid() {
    APP ROOT — routing logic unchanged from v1
 ───────────────────────────────────────────────────────────────────────────── */
 export default function App() {
-  const [page, setPage]           = useState("Home");
+  // Read ?page= and ?token= from URL on initial load.
+  // This allows token email links like /?page=leadership&token=TOKEN
+  // to land directly on the correct diagnostic page with the token in the URL.
+  const getInitialPage = () => {
+    const params = new URLSearchParams(window.location.search);
+    const p = params.get("page");
+    if (p === "leadership" || p === "team") return p;
+    return "Home";
+  };
+
+  const [page, setPage]           = useState(getInitialPage);
   const [results, setResults]     = useState(null);
   const [articleId, setArticleId] = useState(null);
 
@@ -489,7 +501,7 @@ export default function App() {
     setPage("Results");
   };
 
-  const isFullscreen = page === "Assessment" || page === "Results";
+  const isFullscreen = page === "Assessment" || page === "Results" || page === "leadership" || page === "team";
 
   const renderPage = () => {
     switch (page) {
@@ -502,6 +514,8 @@ export default function App() {
       case "Article":    return <BlogPage       articleId={articleId} setPage={go} />;
       case "Terms":      return <TermsPage      setPage={go} />;
       case "Privacy":    return <PrivacyPage    setPage={go} />;
+      case "leadership": return <LeadershipDiagnosticPage setPage={go} />;
+      case "team":       return <TeamDiagnosticPage       setPage={go} />;
       default:           return <HomePage       setPage={go} />;
     }
   };
