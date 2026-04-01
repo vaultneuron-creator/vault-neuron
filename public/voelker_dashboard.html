@@ -1,0 +1,1010 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Voelker Controls — Operational Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;800;900&family=IBM+Plex+Mono:wght@400;500&family=Barlow:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0A0A0A;--card:#161412;--surface:#1E1B18;--raised:#252220;
+  --border:#2E2B28;--border2:#3A3632;
+  --teal:#2A9BB5;--teal2:#1A7A90;--teal3:#0D4A57;--tealGlow:rgba(42,155,181,.12);
+  --amber:#C4830A;--amber2:#8A5A06;--amberGlow:rgba(196,131,10,.1);
+  --red:#C43A2A;--red2:#8A2018;--redGlow:rgba(196,58,42,.1);
+  --green:#2A8A4A;--green2:#1A5A30;--greenGlow:rgba(42,138,74,.1);
+  --purple:#6B4FD8;--purple2:#3A2A8A;--purpleGlow:rgba(107,79,216,.1);
+  --text:#E8E4DF;--light:#C8C2B8;--muted:#7A7268;--faint:#3A3632;
+}
+body{background:var(--bg);color:var(--text);font-family:'Barlow',sans-serif;font-size:14px;overflow-x:hidden}
+
+/* TOPBAR */
+.topbar{background:var(--card);border-bottom:1px solid var(--border);padding:0 24px;height:52px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:200}
+.brand{display:flex;align-items:center;gap:12px}
+.brand-mark{width:30px;height:30px;background:var(--teal3);border:1px solid var(--teal);display:flex;align-items:center;justify-content:center;font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:13px;color:var(--teal)}
+.brand-name{font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:16px;letter-spacing:.06em;text-transform:uppercase;color:var(--text)}
+.brand-name span{color:var(--teal)}
+.sync-badge{display:flex;align-items:center;gap:6px;font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--muted)}
+.sync-dot{width:6px;height:6px;border-radius:50%;background:var(--green);animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+
+/* GLOBAL FILTER BAR */
+.filter-bar{background:var(--surface);border-bottom:1px solid var(--border);padding:8px 24px;display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.filter-bar label{font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.1em;white-space:nowrap}
+.filter-bar select{background:var(--card);border:1px solid var(--border2);color:var(--text);padding:5px 10px;border-radius:3px;font-size:12px;cursor:pointer;min-width:140px}
+.filter-bar select:focus{outline:none;border-color:var(--teal)}
+.filter-sep{width:1px;height:24px;background:var(--border2)}
+.filter-clear{background:none;border:1px solid var(--border2);color:var(--muted);padding:4px 10px;border-radius:3px;font-size:11px;cursor:pointer}
+.filter-clear:hover{border-color:var(--teal);color:var(--teal)}
+.filter-active-badge{background:var(--tealGlow);border:1px solid var(--teal3);color:var(--teal);padding:2px 8px;border-radius:2px;font-family:'IBM Plex Mono',monospace;font-size:10px;display:none}
+.filter-active-badge.show{display:inline-block}
+
+/* NAV */
+.nav{background:var(--card);border-bottom:1px solid var(--border);padding:0 24px;display:flex;align-items:center;gap:2px;overflow-x:auto}
+.nav-tab{padding:10px 16px;font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-1px;transition:color .15s,border-color .15s;user-select:none;white-space:nowrap}
+.nav-tab:hover{color:var(--light)}
+.nav-tab.active{color:var(--teal);border-bottom-color:var(--teal)}
+
+/* MAIN */
+.main{padding:20px 24px 60px}
+
+/* HERO STATS */
+.hero-stats{display:grid;grid-template-columns:repeat(8,1fr);gap:8px;margin-bottom:20px}
+.stat-card{background:var(--card);border:1px solid var(--border);border-radius:3px;padding:14px 16px;position:relative;overflow:hidden;transition:border-color .15s}
+.stat-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px}
+.sc-teal::before{background:var(--teal)}.sc-amber::before{background:var(--amber)}.sc-red::before{background:var(--red)}.sc-green::before{background:var(--green)}.sc-purple::before{background:var(--purple)}.sc-gray::before{background:var(--border2)}
+.stat-val{font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:28px;line-height:1;margin-bottom:3px}
+.sc-teal .stat-val{color:var(--teal)}.sc-amber .stat-val{color:var(--amber)}.sc-red .stat-val{color:var(--red)}.sc-green .stat-val{color:var(--green)}.sc-purple .stat-val{color:var(--purple)}.sc-gray .stat-val{color:var(--light)}
+.stat-lbl{font-family:'IBM Plex Mono',monospace;font-size:9px;letter-spacing:.12em;color:var(--muted);text-transform:uppercase}
+.stat-sub{font-size:11px;color:var(--muted);margin-top:3px}
+.stat-delta{position:absolute;top:10px;right:10px;font-family:'IBM Plex Mono',monospace;font-size:9px;padding:2px 5px;border-radius:2px}
+.delta-warn{background:var(--amberGlow);color:var(--amber);border:1px solid var(--amber2)}
+.delta-bad{background:var(--redGlow);color:var(--red);border:1px solid var(--red2)}
+.delta-good{background:var(--greenGlow);color:var(--green);border:1px solid var(--green2)}
+
+/* GRID */
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px}
+.grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;margin-bottom:14px}
+.grid-3-1{display:grid;grid-template-columns:2fr 1fr;gap:14px;margin-bottom:14px}
+.grid-1-2{display:grid;grid-template-columns:1fr 2fr;gap:14px;margin-bottom:14px}
+
+/* PANEL */
+.panel{background:var(--card);border:1px solid var(--border);border-radius:3px;padding:16px 18px;overflow:hidden}
+.panel-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
+.panel-title{font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:13px;letter-spacing:.08em;text-transform:uppercase;color:var(--light)}
+.panel-badge{font-family:'IBM Plex Mono',monospace;font-size:9px;letter-spacing:.1em;padding:2px 7px;border-radius:2px}
+.pb-teal{background:var(--tealGlow);color:var(--teal);border:1px solid var(--teal3)}
+.pb-amber{background:var(--amberGlow);color:var(--amber);border:1px solid var(--amber2)}
+.pb-red{background:var(--redGlow);color:var(--red);border:1px solid var(--red2)}
+.pb-green{background:var(--greenGlow);color:var(--green);border:1px solid var(--green2)}
+.pb-purple{background:var(--purpleGlow);color:var(--purple);border:1px solid var(--purple2)}
+
+/* BAR CHART */
+.bar-chart{display:flex;flex-direction:column;gap:7px}
+.bar-row{display:flex;align-items:center;gap:8px}
+.bar-label{font-size:11px;color:var(--light);min-width:80px;text-align:right;font-weight:500}
+.bar-track{flex:1;background:var(--surface);border-radius:2px;height:20px;position:relative;overflow:hidden}
+.bar-fill{height:100%;border-radius:2px;display:flex;align-items:center;padding-left:7px}
+.bar-fill span{font-family:'IBM Plex Mono',monospace;font-size:9px;font-weight:500;white-space:nowrap}
+.bar-end{font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--muted);min-width:38px;text-align:right}
+
+/* TABLES */
+.data-table{width:100%;border-collapse:collapse}
+.data-table th{font-family:'IBM Plex Mono',monospace;font-size:9px;letter-spacing:.1em;color:var(--muted);text-transform:uppercase;padding:6px 10px;text-align:left;border-bottom:1px solid var(--border)}
+.data-table td{padding:8px 10px;border-bottom:1px solid var(--surface);font-size:12px;color:var(--light)}
+.data-table tr:last-child td{border-bottom:none}
+.data-table tr:hover td{background:var(--surface)}
+.data-table th.right,.data-table td.right{text-align:right}
+
+/* BADGES */
+.badge{display:inline-block;padding:2px 6px;border-radius:2px;font-family:'IBM Plex Mono',monospace;font-size:9px;font-weight:500;letter-spacing:.04em}
+.b-open{background:var(--tealGlow);color:var(--teal);border:1px solid var(--teal3)}
+.b-pending{background:var(--amberGlow);color:var(--amber);border:1px solid var(--amber2)}
+.b-resolved,.b-won,.b-closed{background:var(--greenGlow);color:var(--green);border:1px solid var(--green2)}
+.b-lost,.b-expired{background:var(--redGlow);color:var(--red);border:1px solid var(--red2)}
+.b-low{background:var(--greenGlow);color:var(--green);border:1px solid var(--green2)}
+.b-critical{background:var(--redGlow);color:var(--red);border:1px solid var(--red2)}
+.b-watch{background:var(--amberGlow);color:var(--amber);border:1px solid var(--amber2)}
+
+/* CALLOUT */
+.callout{border-radius:3px;padding:12px 16px;margin-bottom:14px;display:flex;align-items:flex-start;gap:12px;border-left:3px solid}
+.callout-teal{background:var(--tealGlow);border-color:var(--teal)}
+.callout-amber{background:var(--amberGlow);border-color:var(--amber)}
+.callout-red{background:var(--redGlow);border-color:var(--red)}
+.callout-green{background:var(--greenGlow);border-color:var(--green)}
+.callout-icon{font-size:14px;flex-shrink:0;margin-top:1px}
+.callout-title{font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:12px;text-transform:uppercase;letter-spacing:.06em;margin-bottom:3px}
+.callout-teal .callout-title{color:var(--teal)}
+.callout-amber .callout-title{color:var(--amber)}
+.callout-red .callout-title{color:var(--red)}
+.callout-green .callout-title{color:var(--green)}
+.callout-body{font-size:12px;color:var(--light);line-height:1.5}
+
+/* PIPELINE STAGES */
+.pipeline-track{display:flex;gap:6px;align-items:stretch}
+.pipe-stage{flex:1;background:var(--surface);border-radius:3px;padding:10px 12px;border:1px solid var(--border);position:relative}
+.pipe-stage::after{content:'→';position:absolute;right:-12px;top:50%;transform:translateY(-50%);color:var(--border2);font-size:13px;z-index:1}
+.pipe-stage:last-child::after{display:none}
+.pipe-label{font-family:'IBM Plex Mono',monospace;font-size:8px;letter-spacing:.1em;color:var(--muted);text-transform:uppercase;margin-bottom:5px}
+.pipe-count{font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:24px;line-height:1}
+.pipe-val{font-size:10px;color:var(--muted);margin-top:2px}
+.pipe-open .pipe-count{color:var(--teal)}.pipe-won .pipe-count{color:var(--green)}.pipe-lost .pipe-count{color:var(--red)}.pipe-expired .pipe-count,.pipe-closed .pipe-count{color:var(--muted)}
+
+/* VENDOR TAGS */
+.vtag{display:inline-block;padding:2px 6px;border-radius:2px;font-size:9px;font-weight:600;font-family:'IBM Plex Mono',monospace}
+
+/* TABS */
+.tab-panel{display:none}.tab-panel.active{display:block}
+
+/* SEARCH/FILTER INPUTS */
+.search-row{display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap;align-items:center}
+.search-row input,.search-row select{background:var(--surface);border:1px solid var(--border2);color:var(--text);padding:8px 12px;border-radius:3px;font-size:13px}
+.search-row input{flex:1;min-width:180px}
+.search-row input:focus,.search-row select:focus{outline:none;border-color:var(--teal)}
+.search-row select{min-width:140px}
+.search-row label{font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;white-space:nowrap}
+
+/* MAC PART BUILDER */
+.mac-builder{background:var(--surface);border:1px solid var(--teal3);border-radius:4px;padding:20px;margin-bottom:16px}
+.mac-title{font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:15px;letter-spacing:.08em;text-transform:uppercase;color:var(--teal);margin-bottom:4px}
+.mac-subtitle{font-size:12px;color:var(--muted);margin-bottom:16px;line-height:1.4}
+.mac-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:16px}
+.mac-field{display:flex;flex-direction:column;gap:5px}
+.mac-field label{font-family:'IBM Plex Mono',monospace;font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.1em}
+.mac-field select{background:var(--card);border:1px solid var(--border2);color:var(--text);padding:8px 10px;border-radius:3px;font-size:12px;width:100%}
+.mac-field select:focus{outline:none;border-color:var(--teal)}
+.mac-result{background:var(--card);border:1px solid var(--border2);border-radius:3px;padding:14px 16px;display:flex;align-items:center;justify-content:space-between;gap:12px}
+.mac-pn-label{font-family:'IBM Plex Mono',monospace;font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.1em;margin-bottom:6px}
+.mac-pn{font-family:'IBM Plex Mono',monospace;font-size:18px;font-weight:500;color:var(--teal);letter-spacing:.08em;word-break:break-all}
+.mac-pn-desc{font-size:11px;color:var(--muted);margin-top:4px;line-height:1.4}
+.mac-copy-btn{background:var(--teal3);border:1px solid var(--teal);color:var(--teal);padding:8px 16px;border-radius:3px;font-family:'IBM Plex Mono',monospace;font-size:11px;cursor:pointer;white-space:nowrap;flex-shrink:0}
+.mac-copy-btn:hover{background:var(--teal2);color:#fff}
+.mac-copy-btn.copied{background:var(--greenGlow);border-color:var(--green);color:var(--green)}
+.mac-warn{background:var(--amberGlow);border:1px solid var(--amber2);border-radius:3px;padding:10px 14px;font-size:12px;color:var(--amber);margin-top:10px}
+
+/* INVENTORY */
+.inv-gauge{display:flex;flex-direction:column;gap:4px}
+.inv-bar-outer{height:8px;background:var(--surface);border-radius:4px;overflow:hidden;margin-top:3px}
+.inv-bar-inner{height:100%;border-radius:4px}
+.stock-ok .inv-bar-inner{background:var(--green)}
+.stock-low .inv-bar-inner{background:var(--amber)}
+.stock-critical .inv-bar-inner{background:var(--red)}
+.stock-over .inv-bar-inner{background:var(--purple)}
+
+/* MINI CHART BARS */
+.mini-bars{display:flex;align-items:flex-end;gap:3px;height:50px}
+.mini-bar{flex:1;border-radius:2px 2px 0 0;min-width:8px}
+
+/* FOOTER */
+.footer{border-top:1px solid var(--border);padding:12px 24px;display:flex;justify-content:space-between;align-items:center;background:var(--card)}
+.footer-l{font-family:'IBM Plex Mono',monospace;font-size:8px;letter-spacing:.1em;color:var(--muted)}
+.footer-r{font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:11px;color:var(--teal);letter-spacing:.06em;text-transform:uppercase}
+
+@keyframes fadeUp{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+.hero-stats .stat-card{animation:fadeUp .35s ease both}
+.hero-stats .stat-card:nth-child(1){animation-delay:.04s}.hero-stats .stat-card:nth-child(2){animation-delay:.08s}.hero-stats .stat-card:nth-child(3){animation-delay:.12s}.hero-stats .stat-card:nth-child(4){animation-delay:.16s}.hero-stats .stat-card:nth-child(5){animation-delay:.20s}.hero-stats .stat-card:nth-child(6){animation-delay:.24s}.hero-stats .stat-card:nth-child(7){animation-delay:.28s}.hero-stats .stat-card:nth-child(8){animation-delay:.32s}
+</style>
+</head>
+<body>
+
+<!-- TOPBAR -->
+<div class="topbar">
+  <div class="brand">
+    <div class="brand-mark">VN</div>
+    <div>
+      <div class="brand-name">Voelker Controls <span>/ Operations</span></div>
+    </div>
+  </div>
+  <div class="sync-badge"><div class="sync-dot"></div>Live Data &nbsp;·&nbsp; VN-260326-113553 &nbsp;·&nbsp; Phase 1 Demo</div>
+</div>
+
+<!-- GLOBAL FILTER BAR -->
+<div class="filter-bar">
+  <label>Filter:</label>
+  <select id="gFilterAM" onchange="applyGlobalFilter()">
+    <option value="">All Account Managers</option>
+    <option>K. Davis</option>
+    <option>R. Carter</option>
+    <option>S. Thompson</option>
+    <option>J. Miller</option>
+    <option>B. Wilson</option>
+  </select>
+  <select id="gFilterCSR" onchange="applyGlobalFilter()">
+    <option value="">All CSRs</option>
+    <option>M. Adams</option>
+    <option>T. Greene</option>
+    <option>A. Clark</option>
+    <option>D. Ross</option>
+  </select>
+  <select id="gFilterVendor" onchange="applyGlobalFilter()">
+    <option value="">All Vendors</option>
+    <option>Ace Controls</option><option>80/20 Inc.</option>
+    <option>Parker Wilkerson</option><option>Parker Legris</option>
+    <option>Piab</option><option>Murrelektronik</option>
+    <option>Camozzi</option><option>Omron</option>
+    <option>PHD Inc.</option><option>MAC Valves</option>
+  </select>
+  <div class="filter-sep"></div>
+  <span class="filter-active-badge" id="filterBadge">Filters Active</span>
+  <button class="filter-clear" onclick="clearFilters()">Clear Filters</button>
+</div>
+
+<!-- NAV -->
+<div class="nav">
+  <div class="nav-tab active" onclick="showTab('overview',this)">Overview</div>
+  <div class="nav-tab" onclick="showTab('orders',this)">Orders</div>
+  <div class="nav-tab" onclick="showTab('quotes',this)">Quote Pipeline</div>
+  <div class="nav-tab" onclick="showTab('vendors',this)">Vendor Pricing</div>
+  <div class="nav-tab" onclick="showTab('returns',this)">Returns</div>
+  <div class="nav-tab" onclick="showTab('errors',this)">Pricing Errors</div>
+  <div class="nav-tab" onclick="showTab('financial',this)" style="color:var(--amber)">Financial Overview</div>
+  <div class="nav-tab" onclick="showTab('inventory',this)" style="color:var(--purple)">Inventory Control</div>
+</div>
+
+<div class="main">
+
+<!-- ══ OVERVIEW ══════════════════════════════════════════════════════════════ -->
+<div id="tab-overview" class="tab-panel active">
+  <div class="callout callout-amber" style="margin-bottom:16px">
+    <div class="callout-icon">◆</div>
+    <div>
+      <div class="callout-title">Phase 1 Demo — Sample Data</div>
+      <div class="callout-body">All numbers built from diagnostic inputs. Every metric populates automatically once connected to Voelker's live data in Answers. Use the filter bar above to slice by account manager, CSR, or vendor.</div>
+    </div>
+  </div>
+
+  <div class="hero-stats">
+    <div class="stat-card sc-teal"><div class="stat-val">$847K</div><div class="stat-lbl">Revenue MTD</div><div class="stat-sub">↑ 6% vs last month</div><div class="stat-delta delta-good">+$48K</div></div>
+    <div class="stat-card sc-green"><div class="stat-val">31.4%</div><div class="stat-lbl">Gross Margin</div><div class="stat-sub">Target: 34%</div><div class="stat-delta delta-warn">−2.6pts</div></div>
+    <div class="stat-card sc-purple"><div class="stat-val">981</div><div class="stat-lbl">Active Orders</div><div class="stat-sub">134 late / at risk</div><div class="stat-delta delta-warn">13.7% late</div></div>
+    <div class="stat-card sc-teal"><div class="stat-val">$2,173</div><div class="stat-lbl">Avg Order Value</div><div class="stat-sub">389 orders MTD</div></div>
+    <div class="stat-card sc-green"><div class="stat-val">62%</div><div class="stat-lbl">Win Rate</div><div class="stat-sub">16 won / 7 lost</div><div class="stat-delta delta-warn">35–75% gap</div></div>
+    <div class="stat-card sc-amber"><div class="stat-val">12</div><div class="stat-lbl">Open Returns</div><div class="stat-sub">Avg 4 vendors</div><div class="stat-delta delta-warn">No tracker today</div></div>
+    <div class="stat-card sc-red"><div class="stat-val">$124</div><div class="stat-lbl">Pricing Error YTD</div><div class="stat-sub">8 errors logged</div><div class="stat-delta delta-bad">$13K/yr pace</div></div>
+    <div class="stat-card sc-gray"><div class="stat-val">28</div><div class="stat-lbl">Parts on File</div><div class="stat-sub">10 vendors live</div></div>
+  </div>
+
+  <div class="grid-2">
+    <div class="panel">
+      <div class="panel-header"><div class="panel-title">Win Rate by Rep</div><div class="panel-badge pb-amber">40-pt gap confirmed</div></div>
+      <div class="bar-chart">
+        <div class="bar-row"><div class="bar-label">K. Davis</div><div class="bar-track"><div class="bar-fill" style="width:100%;background:#1A3A20"><span style="color:var(--green)">100% — 5 won / 0 lost</span></div></div></div>
+        <div class="bar-row"><div class="bar-label">S. Thompson</div><div class="bar-track"><div class="bar-fill" style="width:100%;background:#1A3A20"><span style="color:var(--green)">100% — 3 won / 0 lost</span></div></div></div>
+        <div class="bar-row"><div class="bar-label">R. Carter</div><div class="bar-track"><div class="bar-fill" style="width:80%;background:#1A3020"><span style="color:var(--teal)">80% — 4 won / 1 lost</span></div></div></div>
+        <div class="bar-row"><div class="bar-label">J. Miller</div><div class="bar-track"><div class="bar-fill" style="width:60%;background:#2A2A10"><span style="color:var(--amber)">60% — 3 won / 2 lost</span></div></div></div>
+        <div class="bar-row"><div class="bar-label">B. Wilson</div><div class="bar-track"><div class="bar-fill" style="width:20%;background:#3A1A10"><span style="color:var(--red)">20% — 1 won / 4 lost</span></div></div></div>
+      </div>
+    </div>
+    <div class="panel">
+      <div class="panel-header"><div class="panel-title">Quote Pipeline</div><div class="panel-badge pb-teal">$444K tracked</div></div>
+      <div class="pipeline-track" style="margin-bottom:14px">
+        <div class="pipe-stage pipe-open"><div class="pipe-label">Open</div><div class="pipe-count">17</div><div class="pipe-val">$171,874</div></div>
+        <div class="pipe-stage pipe-won"><div class="pipe-label">Won</div><div class="pipe-count">16</div><div class="pipe-val">$126,136</div></div>
+        <div class="pipe-stage pipe-lost"><div class="pipe-label">Lost</div><div class="pipe-count">7</div><div class="pipe-val">$47,154</div></div>
+        <div class="pipe-stage pipe-expired"><div class="pipe-label">Expired</div><div class="pipe-count">10</div><div class="pipe-val">$98,543</div></div>
+      </div>
+      <div class="callout callout-amber" style="margin-bottom:0">
+        <div class="callout-icon">!</div>
+        <div><div class="callout-body">$98K in expired quotes. Some were winnable. Follow-up triggers at 7 and 14 days recover this category.</div></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="grid-3">
+    <div class="panel">
+      <div class="panel-header"><div class="panel-title">Returns by Vendor</div><div class="panel-badge pb-amber">12 open</div></div>
+      <div class="bar-chart">
+        <div class="bar-row"><div class="bar-label">Omron</div><div class="bar-track"><div class="bar-fill" style="width:100%;background:#3A2A0A"><span style="color:var(--amber)">5 open</span></div></div></div>
+        <div class="bar-row"><div class="bar-label">80/20 Inc.</div><div class="bar-track"><div class="bar-fill" style="width:60%;background:#3A2A0A"><span style="color:var(--amber)">3</span></div></div></div>
+        <div class="bar-row"><div class="bar-label">Ace Controls</div><div class="bar-track"><div class="bar-fill" style="width:40%;background:#3A2A0A"><span style="color:var(--amber)">2</span></div></div></div>
+        <div class="bar-row"><div class="bar-label">Parker</div><div class="bar-track"><div class="bar-fill" style="width:20%;background:#3A2A0A"><span style="color:var(--amber)">1</span></div></div></div>
+        <div class="bar-row"><div class="bar-label">MAC Valves</div><div class="bar-track"><div class="bar-fill" style="width:20%;background:#3A2A0A"><span style="color:var(--amber)">1</span></div></div></div>
+      </div>
+    </div>
+    <div class="panel">
+      <div class="panel-header"><div class="panel-title">Pricing Error Trend</div><div class="panel-badge pb-red">$1,083/mo projected</div></div>
+      <div style="display:flex;align-items:center;gap:14px;margin-bottom:12px">
+        <div><div style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:38px;color:var(--red);line-height:1">$124</div><div style="font-family:'IBM Plex Mono',monospace;font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.1em">YTD (sample)</div></div>
+        <div style="font-size:11px;color:var(--muted);line-height:1.5">52 errors/yr confirmed.<br>$13K annual cost.<br>Running untracked today.</div>
+      </div>
+      <div class="mini-bars">
+        <div style="display:flex;flex-direction:column;align-items:center;gap:3px;flex:1"><div class="mini-bar" style="height:55px;background:var(--red2);border-top:2px solid var(--red)"></div><div style="font-family:'IBM Plex Mono',monospace;font-size:8px;color:var(--muted)">Dec</div></div>
+        <div style="display:flex;flex-direction:column;align-items:center;gap:3px;flex:1"><div class="mini-bar" style="height:5px;background:var(--red2);border-top:2px solid var(--red)"></div><div style="font-family:'IBM Plex Mono',monospace;font-size:8px;color:var(--muted)">Jan</div></div>
+        <div style="display:flex;flex-direction:column;align-items:center;gap:3px;flex:1"><div class="mini-bar" style="height:13px;background:var(--red2);border-top:2px solid var(--red)"></div><div style="font-family:'IBM Plex Mono',monospace;font-size:8px;color:var(--muted)">Feb</div></div>
+        <div style="display:flex;flex-direction:column;align-items:center;gap:3px;flex:1"><div class="mini-bar" style="height:22px;background:var(--red2);border-top:2px solid var(--red)"></div><div style="font-family:'IBM Plex Mono',monospace;font-size:8px;color:var(--muted)">Mar</div></div>
+      </div>
+    </div>
+    <div class="panel">
+      <div class="panel-header"><div class="panel-title">Vendor Data Sources</div><div class="panel-badge pb-teal">10 of 10 mapped</div></div>
+      <div style="display:flex;flex-direction:column;gap:5px">
+        <div style="display:flex;align-items:center;gap:7px;padding:6px 8px;background:var(--surface);border-radius:2px;border-left:3px solid var(--green)"><div style="flex:1;font-size:11px;font-weight:600">Ace Controls</div><div style="font-family:'IBM Plex Mono',monospace;font-size:8px;color:var(--green)">EXCEL</div></div>
+        <div style="display:flex;align-items:center;gap:7px;padding:6px 8px;background:var(--surface);border-radius:2px;border-left:3px solid var(--green)"><div style="flex:1;font-size:11px;font-weight:600">80/20 Inc.</div><div style="font-family:'IBM Plex Mono',monospace;font-size:8px;color:var(--green)">EXCEL</div></div>
+        <div style="display:flex;align-items:center;gap:7px;padding:6px 8px;background:var(--surface);border-radius:2px;border-left:3px solid var(--teal)"><div style="flex:1;font-size:11px;font-weight:600">Parker (2 lines)</div><div style="font-family:'IBM Plex Mono',monospace;font-size:8px;color:var(--teal)">API</div></div>
+        <div style="display:flex;align-items:center;gap:7px;padding:6px 8px;background:var(--surface);border-radius:2px;border-left:3px solid var(--teal)"><div style="flex:1;font-size:11px;font-weight:600">Piab</div><div style="font-family:'IBM Plex Mono',monospace;font-size:8px;color:var(--teal)">REST API</div></div>
+        <div style="display:flex;align-items:center;gap:7px;padding:6px 8px;background:var(--surface);border-radius:2px;border-left:3px solid var(--amber)"><div style="flex:1;font-size:11px;font-weight:600">Murr / Camozzi / Omron / PHD</div><div style="font-family:'IBM Plex Mono',monospace;font-size:8px;color:var(--amber)">PORTAL</div></div>
+        <div style="display:flex;align-items:center;gap:7px;padding:6px 8px;background:var(--surface);border-radius:2px;border-left:3px solid var(--red)"><div style="flex:1;font-size:11px;font-weight:600">MAC Valves</div><div style="font-family:'IBM Plex Mono',monospace;font-size:8px;color:var(--red)">PDF PARSE</div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ ORDERS ══════════════════════════════════════════════════════════════ -->
+<div id="tab-orders" class="tab-panel">
+  <div class="callout callout-teal" style="margin-bottom:14px">
+    <div class="callout-icon">◆</div>
+    <div><div class="callout-title">Order Management</div><div class="callout-body">Open, fulfilled, late, and backordered orders. Filter by account manager or CSR using the bar above. Parts missing the buyer queue and pick ticket failures are two confirmed Answers bugs — both surfaced in the team diagnostic.</div></div>
+  </div>
+  <div class="hero-stats" style="grid-template-columns:repeat(6,1fr);margin-bottom:16px">
+    <div class="stat-card sc-purple"><div class="stat-val">981</div><div class="stat-lbl">Total Active</div><div class="stat-sub">All open orders</div></div>
+    <div class="stat-card sc-green"><div class="stat-val">847</div><div class="stat-lbl">On Time</div><div class="stat-sub">86.3% of active</div></div>
+    <div class="stat-card sc-red"><div class="stat-val">134</div><div class="stat-lbl">Late / At Risk</div><div class="stat-sub">Avg 8 days late</div><div class="stat-delta delta-bad">Catch before cust asks</div></div>
+    <div class="stat-card sc-amber"><div class="stat-val">47</div><div class="stat-lbl">Backordered</div><div class="stat-sub">Vendor lead time</div></div>
+    <div class="stat-card sc-teal"><div class="stat-val">$847K</div><div class="stat-lbl">Revenue MTD</div><div class="stat-sub">389 orders fulfilled</div></div>
+    <div class="stat-card sc-green"><div class="stat-val">$265K</div><div class="stat-lbl">Gross Profit MTD</div><div class="stat-sub">31.4% margin</div></div>
+  </div>
+  <div class="grid-2" style="margin-bottom:14px">
+    <div class="panel">
+      <div class="panel-header"><div class="panel-title">Orders by Status</div></div>
+      <div class="bar-chart">
+        <div class="bar-row"><div class="bar-label">On Time</div><div class="bar-track"><div class="bar-fill" style="width:86%;background:var(--green2)"><span style="color:var(--green)">847 orders</span></div></div><div class="bar-end" style="color:var(--green)">86%</div></div>
+        <div class="bar-row"><div class="bar-label">Late</div><div class="bar-track"><div class="bar-fill" style="width:14%;background:var(--red2)"><span style="color:var(--red)">134</span></div></div><div class="bar-end" style="color:var(--red)">14%</div></div>
+        <div class="bar-row"><div class="bar-label">Backordered</div><div class="bar-track"><div class="bar-fill" style="width:5%;background:var(--amber2)"><span style="color:var(--amber)">47</span></div></div><div class="bar-end" style="color:var(--amber)">5%</div></div>
+      </div>
+    </div>
+    <div class="panel">
+      <div class="panel-header"><div class="panel-title">Revenue & Margin by Account Manager</div></div>
+      <table class="data-table">
+        <thead><tr><th>Account Manager</th><th class="right">Revenue</th><th class="right">COGS</th><th class="right">Gross Profit</th><th class="right">Margin</th><th class="right">Orders</th></tr></thead>
+        <tbody>
+          <tr><td style="font-weight:600">R. Carter</td><td class="right" style="font-family:'IBM Plex Mono',monospace;font-size:11px">$214,800</td><td class="right" style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--muted)">$137,100</td><td class="right" style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--green)">$77,700</td><td class="right" style="color:var(--green);font-weight:600;font-family:'IBM Plex Mono',monospace;font-size:11px">36.1%</td><td class="right">87</td></tr>
+          <tr><td style="font-weight:600">K. Davis</td><td class="right" style="font-family:'IBM Plex Mono',monospace;font-size:11px">$198,400</td><td class="right" style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--muted)">$122,500</td><td class="right" style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--green)">$75,900</td><td class="right" style="color:var(--green);font-weight:600;font-family:'IBM Plex Mono',monospace;font-size:11px">38.2%</td><td class="right">79</td></tr>
+          <tr><td style="font-weight:600">S. Thompson</td><td class="right" style="font-family:'IBM Plex Mono',monospace;font-size:11px">$176,200</td><td class="right" style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--muted)">$118,400</td><td class="right" style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--teal)">$57,800</td><td class="right" style="color:var(--teal);font-weight:600;font-family:'IBM Plex Mono',monospace;font-size:11px">32.8%</td><td class="right">71</td></tr>
+          <tr><td style="font-weight:600">J. Miller</td><td class="right" style="font-family:'IBM Plex Mono',monospace;font-size:11px">$142,100</td><td class="right" style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--muted)">$100,100</td><td class="right" style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--amber)">$42,000</td><td class="right" style="color:var(--amber);font-weight:600;font-family:'IBM Plex Mono',monospace;font-size:11px">29.6%</td><td class="right">62</td></tr>
+          <tr><td style="font-weight:600">B. Wilson</td><td class="right" style="font-family:'IBM Plex Mono',monospace;font-size:11px">$115,500</td><td class="right" style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--muted)">$86,800</td><td class="right" style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--red)">$28,700</td><td class="right" style="color:var(--red);font-weight:600;font-family:'IBM Plex Mono',monospace;font-size:11px">24.8%</td><td class="right">90</td></tr>
+          <tr style="border-top:1px solid var(--border2)"><td style="font-weight:700;color:var(--teal)">Total</td><td class="right" style="font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:600;color:var(--teal)">$847,000</td><td class="right" style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--muted)">$564,900</td><td class="right" style="font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:600;color:var(--green)">$282,100</td><td class="right" style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--teal);font-weight:700">31.4%</td><td class="right" style="font-weight:700">389</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+  <div class="panel">
+    <div class="panel-header"><div class="panel-title">Recent Orders</div><div class="panel-badge pb-purple">981 active</div></div>
+    <div class="search-row"><input type="text" placeholder="Search customer, part, order #..." oninput="filterOrders(this.value)"><select onchange="filterOrderStatus(this.value)"><option value="">All Statuses</option><option>On Time</option><option>Late</option><option>Backordered</option><option>Fulfilled</option></select></div>
+    <table class="data-table" id="ordersTable">
+      <thead><tr><th>Order #</th><th>Customer</th><th>Part</th><th>Vendor</th><th>Account Mgr</th><th>CSR</th><th class="right">Value</th><th class="right">Cost</th><th class="right">Margin</th><th>Status</th><th>Due</th></tr></thead>
+      <tbody>
+        <tr><td style="font-family:'IBM Plex Mono',monospace;font-size:10px">ORD-2026-0841</td><td>Crown Equipment</td><td style="font-family:'IBM Plex Mono',monospace;font-size:10px">W68G-4AF-RMG</td><td>Parker</td><td>K. Davis</td><td>M. Adams</td><td class="right" style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--teal)">$1,426</td><td class="right" style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--muted)">$888</td><td class="right" style="color:var(--green);font-size:11px">37.7%</td><td><span class="badge b-open">On Time</span></td><td style="font-size:11px;color:var(--muted)">Apr 8</td></tr>
+        <tr><td style="font-family:'IBM Plex Mono',monospace;font-size:10px">ORD-2026-0838</td><td>Cincinnati Milacron</td><td style="font-family:'IBM Plex Mono',monospace;font-size:10px">ACE-SC400M-1</td><td>Ace Controls</td><td>R. Carter</td><td>T. Greene</td><td class="right" style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--teal)">$904</td><td class="right" style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--muted)">$565</td><td class="right" style="color:var(--green);font-size:11px">37.5%</td><td><span class="badge b-open">On Time</span></td><td style="font-size:11px;color:var(--muted)">Apr 5</td></tr>
+        <tr><td style="font-family:'IBM Plex Mono',monospace;font-size:10px">ORD-2026-0821</td><td>Dayton Superior</td><td style="font-family:'IBM Plex Mono',monospace;font-size:10px">E2E-X5MF1</td><td>Omron</td><td>B. Wilson</td><td>A. Clark</td><td class="right" style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--teal)">$756</td><td class="right" style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--muted)">$588</td><td class="right" style="color:var(--amber);font-size:11px">22.2%</td><td><span class="badge b-pending" style="background:var(--redGlow);color:var(--red);border-color:var(--red2)">Late</span></td><td style="font-size:11px;color:var(--red)">Apr 1 !</td></tr>
+        <tr><td style="font-family:'IBM Plex Mono',monospace;font-size:10px">ORD-2026-0819</td><td>Yaskawa America</td><td style="font-family:'IBM Plex Mono',monospace;font-size:10px">45A-AA1-DDAA-1BA</td><td>MAC Valves</td><td>S. Thompson</td><td>D. Ross</td><td class="right" style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--teal)">$2,232</td><td class="right" style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--muted)">$1,490</td><td class="right" style="color:var(--green);font-size:11px">33.2%</td><td><span class="badge b-open">On Time</span></td><td style="font-size:11px;color:var(--muted)">Apr 12</td></tr>
+        <tr><td style="font-family:'IBM Plex Mono',monospace;font-size:10px">ORD-2026-0804</td><td>Ohio Gasket</td><td style="font-family:'IBM Plex Mono',monospace;font-size:10px">B15</td><td>Piab</td><td>J. Miller</td><td>M. Adams</td><td class="right" style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--teal)">$490</td><td class="right" style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--muted)">$343</td><td class="right" style="color:var(--amber);font-size:11px">30.0%</td><td><span class="badge" style="background:var(--amberGlow);color:var(--amber);border:1px solid var(--amber2)">Backordered</span></td><td style="font-size:11px;color:var(--amber)">Apr 15</td></tr>
+        <tr><td style="font-family:'IBM Plex Mono',monospace;font-size:10px">ORD-2026-0798</td><td>Crown Equipment</td><td style="font-family:'IBM Plex Mono',monospace;font-size:10px">8020-3030</td><td>80/20 Inc.</td><td>K. Davis</td><td>T. Greene</td><td class="right" style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--teal)">$1,104</td><td class="right" style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--muted)">$736</td><td class="right" style="color:var(--green);font-size:11px">33.3%</td><td><span class="badge b-resolved">Fulfilled</span></td><td style="font-size:11px;color:var(--muted)">Mar 28 ✓</td></tr>
+        <tr><td style="font-family:'IBM Plex Mono',monospace;font-size:10px">ORD-2026-0791</td><td>Robbins &amp; Myers</td><td style="font-family:'IBM Plex Mono',monospace;font-size:10px">SVR-1/2-2-RN</td><td>PHD Inc.</td><td>R. Carter</td><td>A. Clark</td><td class="right" style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--teal)">$3,720</td><td class="right" style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--muted)">$2,310</td><td class="right" style="color:var(--green);font-size:11px">37.9%</td><td><span class="badge b-pending" style="background:var(--redGlow);color:var(--red);border-color:var(--red2)">Late</span></td><td style="font-size:11px;color:var(--red)">Mar 26 !</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ══ QUOTES ══════════════════════════════════════════════════════════════ -->
+<div id="tab-quotes" class="tab-panel">
+  <div class="callout callout-teal" style="margin-bottom:14px">
+    <div class="callout-icon">◆</div>
+    <div><div class="callout-title">Quote Pipeline — Real Win Rate for the First Time</div><div class="callout-body">Four leaders gave win rate estimates from 35% to 75%. This tab produces the actual number from real quote data. Filter by account manager above to see individual pipeline performance.</div></div>
+  </div>
+  <div class="hero-stats" style="grid-template-columns:repeat(4,1fr);margin-bottom:10px">
+    <div class="stat-card sc-teal"><div class="stat-val">50</div><div class="stat-lbl">Total Quotes</div><div class="stat-sub">Last 90 days</div></div>
+    <div class="stat-card sc-green"><div class="stat-val">62%</div><div class="stat-lbl">Win Rate</div><div class="stat-sub">On closed deals</div></div>
+    <div class="stat-card sc-teal"><div class="stat-val">$172K</div><div class="stat-lbl">Open Pipeline</div><div class="stat-sub">17 active quotes</div></div>
+    <div class="stat-card sc-green"><div class="stat-val">$126K</div><div class="stat-lbl">Won Value</div><div class="stat-sub">16 quotes closed won</div></div>
+  </div>
+  <!-- Quote financials row -->
+  <div class="hero-stats" style="grid-template-columns:repeat(4,1fr);margin-bottom:16px">
+    <div class="stat-card sc-teal"><div class="stat-val" style="font-size:24px">$444K</div><div class="stat-lbl">Total Quote Value</div><div class="stat-sub">Won + Open + Lost + Expired</div></div>
+    <div class="stat-card sc-green"><div class="stat-val" style="font-size:24px">$45K</div><div class="stat-lbl">Won Gross Profit</div><div class="stat-sub">35.7% avg margin on won</div></div>
+    <div class="stat-card sc-red"><div class="stat-val" style="font-size:24px">$81K</div><div class="stat-lbl">Won COGS</div><div class="stat-sub">Cost of goods on won deals</div></div>
+    <div class="stat-card sc-amber"><div class="stat-val" style="font-size:24px">$146K</div><div class="stat-lbl">Lost / Expired Value</div><div class="stat-sub">$99K expired — some recoverable</div></div>
+  </div>
+  <div class="grid-2">
+    <div class="panel">
+      <div class="panel-header"><div class="panel-title">Rep Performance</div><div class="panel-badge pb-teal">Win rate + revenue</div></div>
+      <table class="data-table">
+        <thead><tr><th>Rep</th><th class="right">Quotes</th><th class="right">Won</th><th class="right">Lost</th><th class="right">Win Rate</th><th class="right">Won Value</th><th class="right">Open Value</th></tr></thead>
+        <tbody>
+          <tr><td style="font-weight:600">K. Davis</td><td class="right">9</td><td class="right" style="color:var(--green)">5</td><td class="right" style="color:var(--red)">0</td><td class="right"><span style="color:var(--green);font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:600">100%</span></td><td class="right" style="font-family:'IBM Plex Mono',monospace;font-size:11px">$29,778</td><td class="right" style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--muted)">$24,200</td></tr>
+          <tr><td style="font-weight:600">S. Thompson</td><td class="right">7</td><td class="right" style="color:var(--green)">3</td><td class="right" style="color:var(--red)">0</td><td class="right"><span style="color:var(--green);font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:600">100%</span></td><td class="right" style="font-family:'IBM Plex Mono',monospace;font-size:11px">$28,877</td><td class="right" style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--muted)">$18,400</td></tr>
+          <tr><td style="font-weight:600">R. Carter</td><td class="right">11</td><td class="right" style="color:var(--green)">4</td><td class="right" style="color:var(--red)">1</td><td class="right"><span style="color:var(--teal);font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:600">80%</span></td><td class="right" style="font-family:'IBM Plex Mono',monospace;font-size:11px">$36,758</td><td class="right" style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--muted)">$41,200</td></tr>
+          <tr><td style="font-weight:600">J. Miller</td><td class="right">12</td><td class="right" style="color:var(--green)">3</td><td class="right" style="color:var(--red)">2</td><td class="right"><span style="color:var(--amber);font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:600">60%</span></td><td class="right" style="font-family:'IBM Plex Mono',monospace;font-size:11px">$12,907</td><td class="right" style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--muted)">$32,600</td></tr>
+          <tr><td style="font-weight:600">B. Wilson</td><td class="right">11</td><td class="right" style="color:var(--green)">1</td><td class="right" style="color:var(--red)">4</td><td class="right"><span style="color:var(--red);font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:600">20%</span></td><td class="right" style="font-family:'IBM Plex Mono',monospace;font-size:11px">$17,817</td><td class="right" style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--muted)">$55,474</td></tr>
+        </tbody>
+      </table>
+      <div class="callout callout-red" style="margin-top:14px;margin-bottom:0">
+        <div class="callout-icon">!</div>
+        <div><div class="callout-body">B. Wilson has $55K open with a 20% close rate. Follow-up triggers at 7 and 14 days recover this category.</div></div>
+      </div>
+    </div>
+    <div class="panel">
+      <div class="panel-header"><div class="panel-title">Recent Quotes</div></div>
+      <table class="data-table">
+        <thead><tr><th>Quote #</th><th>Customer</th><th>Rep</th><th>CSR</th><th class="right">Value</th><th class="right">Cost</th><th class="right">Margin</th><th>Status</th><th>Date</th></tr></thead>
+        <tbody>
+          <tr><td style="font-family:'IBM Plex Mono',monospace;font-size:10px">Q-2026-1049</td><td>Crown Equipment</td><td>K. Davis</td><td>M. Adams</td><td class="right" style="font-family:'IBM Plex Mono',monospace;font-size:11px">$8,420</td><td class="right" style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--muted)">$5,220</td><td class="right" style="color:var(--green);font-size:11px">38.0%</td><td><span class="badge b-open">Open</span></td><td style="font-size:11px;color:var(--muted)">Mar 28</td></tr>
+          <tr><td style="font-family:'IBM Plex Mono',monospace;font-size:10px">Q-2026-1048</td><td>Yaskawa America</td><td>S. Thompson</td><td>T. Greene</td><td class="right" style="font-family:'IBM Plex Mono',monospace;font-size:11px">$14,200</td><td class="right" style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--muted)">$9,520</td><td class="right" style="color:var(--green);font-size:11px">33.0%</td><td><span class="badge b-resolved">Won</span></td><td style="font-size:11px;color:var(--muted)">Mar 26</td></tr>
+          <tr><td style="font-family:'IBM Plex Mono',monospace;font-size:10px">Q-2026-1047</td><td>Dayton Superior</td><td>B. Wilson</td><td>A. Clark</td><td class="right" style="font-family:'IBM Plex Mono',monospace;font-size:11px">$6,800</td><td class="right" style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--muted)">$5,100</td><td class="right" style="color:var(--red);font-size:11px">25.0%</td><td><span class="badge b-lost">Lost</span></td><td style="font-size:11px;color:var(--muted)">Mar 24</td></tr>
+          <tr><td style="font-family:'IBM Plex Mono',monospace;font-size:10px">Q-2026-1044</td><td>Ohio Gasket</td><td>J. Miller</td><td>D. Ross</td><td class="right" style="font-family:'IBM Plex Mono',monospace;font-size:11px">$3,140</td><td class="right" style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--muted)">$2,200</td><td class="right" style="color:var(--amber);font-size:11px">29.9%</td><td><span class="badge b-open">Open</span></td><td style="font-size:11px;color:var(--muted)">Mar 22</td></tr>
+          <tr><td style="font-family:'IBM Plex Mono',monospace;font-size:10px">Q-2026-1041</td><td>Robbins &amp; Myers</td><td>R. Carter</td><td>M. Adams</td><td class="right" style="font-family:'IBM Plex Mono',monospace;font-size:11px">$18,600</td><td class="right" style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--muted)">$11,600</td><td class="right" style="color:var(--green);font-size:11px">37.6%</td><td><span class="badge b-resolved">Won</span></td><td style="font-size:11px;color:var(--muted)">Mar 20</td></tr>
+          <tr><td style="font-family:'IBM Plex Mono',monospace;font-size:10px">Q-2026-1038</td><td>Standard Register</td><td>B. Wilson</td><td>A. Clark</td><td class="right" style="font-family:'IBM Plex Mono',monospace;font-size:11px">$4,900</td><td class="right" style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--muted)">$3,820</td><td class="right" style="color:var(--red);font-size:11px">22.0%</td><td><span class="badge b-expired">Expired</span></td><td style="font-size:11px;color:var(--muted)">Mar 12</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ══ VENDOR PRICING ══════════════════════════════════════════════════════ -->
+<div id="tab-vendors" class="tab-panel">
+  <div class="callout callout-teal" style="margin-bottom:14px">
+    <div class="callout-icon">◆</div>
+    <div><div class="callout-title">Vendor Pricing — One Search, All 10 Vendors</div><div class="callout-body">Replaces 7 portal logins, phone calls, and PDF hunting. Search by part number or description below. The MAC Valves Part Number Builder below translates series/function/size selections into the correct MAC part number — confirmed as a gap by two team respondents independently.</div></div>
+  </div>
+
+  <!-- MAC PART BUILDER -->
+  <div class="mac-builder">
+    <div class="mac-title">◆ MAC Valves — Part Number Builder</div>
+    <div class="mac-subtitle">Two team respondents independently named MAC Valves as a gap. No portal, no configurator. This builder translates your selections into the correct MAC part number — then searches current pricing from the parsed catalog.</div>
+    <div class="mac-grid">
+      <div class="mac-field">
+        <label>Series</label>
+        <select id="macSeries" onchange="buildMacPN()">
+          <option value="">— Select Series —</option>
+          <option value="45A">45A — 4-Way General Purpose</option>
+          <option value="56C">56C — Pilot Operated</option>
+          <option value="35A">35A — 3-Way</option>
+          <option value="92A">92A — Miniature</option>
+          <option value="6300D">6300D — Stainless Body</option>
+        </select>
+      </div>
+      <div class="mac-field">
+        <label>Solenoid Config</label>
+        <select id="macSolenoid" onchange="buildMacPN()">
+          <option value="">— Select —</option>
+          <option value="AA1">AA1 — Single Sol, Spring Ret</option>
+          <option value="AB1">AB1 — Double Solenoid</option>
+          <option value="AA2">AA2 — Single Sol, Detent</option>
+          <option value="AC1">AC1 — Single Sol, No Spring</option>
+        </select>
+      </div>
+      <div class="mac-field">
+        <label>Voltage / Coil</label>
+        <select id="macVoltage" onchange="buildMacPN()">
+          <option value="">— Select —</option>
+          <option value="DDAA">DDAA — 24VDC</option>
+          <option value="DJAA">DJAA — 120VAC 60Hz</option>
+          <option value="DCAA">DCAA — 12VDC</option>
+          <option value="DNAA">DNAA — 24VAC 60Hz</option>
+        </select>
+      </div>
+      <div class="mac-field">
+        <label>Port Size / Options</label>
+        <select id="macPort" onchange="buildMacPN()">
+          <option value="">— Select —</option>
+          <option value="1BA">1BA — 1/8 NPT, Standard</option>
+          <option value="1BB">1BB — 1/8 NPT, Buna Seals</option>
+          <option value="1CA">1CA — 1/4 NPT, Standard</option>
+          <option value="1CB">1CB — 1/4 NPT, Buna Seals</option>
+          <option value="1DA">1DA — 3/8 NPT, Standard</option>
+        </select>
+      </div>
+    </div>
+    <div class="mac-result">
+      <div style="flex:1">
+        <div class="mac-pn-label">Generated Part Number</div>
+        <div class="mac-pn" id="macPN">— Select all fields above —</div>
+        <div class="mac-pn-desc" id="macDesc">Select series, solenoid config, voltage, and port size to generate the correct MAC Valves part number.</div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:8px;flex-shrink:0">
+        <button class="mac-copy-btn" id="macCopyBtn" onclick="copyMacPN()" disabled>Copy Part #</button>
+        <button class="mac-copy-btn" onclick="searchMacPN()" id="macSearchBtn" disabled style="background:var(--teal3);border-color:var(--teal)">Search Pricing</button>
+      </div>
+    </div>
+    <div class="mac-warn" id="macWarn" style="display:none">⚠ Complete all 4 fields to generate a valid part number. MAC Valves requires exact series-solenoid-voltage-port combination for pricing lookup.</div>
+  </div>
+
+  <!-- PRICING SEARCH -->
+  <div class="panel">
+    <div class="panel-header">
+      <div class="panel-title">Search Vendor Pricing</div>
+      <div class="panel-badge pb-teal">28 parts — 10 vendors</div>
+    </div>
+    <div class="search-row">
+      <input id="searchInput" type="text" placeholder="Search part number or description..." oninput="filterTable()">
+      <select id="vendorFilter" onchange="filterTable()">
+        <option value="">All Vendors</option>
+        <option>Ace Controls</option><option>80/20 Inc.</option>
+        <option>Parker Wilkerson</option><option>Parker Legris</option>
+        <option>Piab</option><option>Murrelektronik</option>
+        <option>Camozzi</option><option>Omron</option>
+        <option>PHD Inc.</option><option>MAC Valves</option>
+      </select>
+    </div>
+    <table class="data-table" id="pricingTable">
+      <thead><tr><th>Vendor</th><th>Part Number</th><th>Description</th><th class="right">List Price</th><th>Lead Time</th><th>Availability</th><th>Source</th></tr></thead>
+      <tbody>
+        <tr><td><span class="vtag" style="background:#1A3A20;color:#2A8A4A">Ace Controls</span></td><td style="font-family:'IBM Plex Mono',monospace;font-size:10px">ACE-SC400M-1</td><td>Shock Absorber SC400M</td><td class="right" style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--teal)">$45.20</td><td>3 days</td><td style="color:var(--green);font-size:11px;font-weight:600">In Stock</td><td style="font-size:9px;color:var(--muted)">Excel</td></tr>
+        <tr><td><span class="vtag" style="background:#1A3A20;color:#2A8A4A">Ace Controls</span></td><td style="font-family:'IBM Plex Mono',monospace;font-size:10px">ACE-SC600M-1</td><td>Shock Absorber SC600M</td><td class="right" style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--teal)">$62.50</td><td>3 days</td><td style="color:var(--green);font-size:11px;font-weight:600">In Stock</td><td style="font-size:9px;color:var(--muted)">Excel</td></tr>
+        <tr><td><span class="vtag" style="background:#1A3A20;color:#2A8A4A">Ace Controls</span></td><td style="font-family:'IBM Plex Mono',monospace;font-size:10px">ACE-SC1000M-2</td><td>Shock Absorber SC1000M Heavy</td><td class="right" style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--teal)">$89.00</td><td>5 days</td><td style="color:var(--amber);font-size:11px;font-weight:600">3 weeks</td><td style="font-size:9px;color:var(--muted)">Excel</td></tr>
+        <tr><td><span class="vtag" style="background:#1A2A3A;color:#2A6AB5">80/20 Inc.</span></td><td style="font-family:'IBM Plex Mono',monospace;font-size:10px">8020-1010</td><td>T-Slot Extrusion 1x1 per ft</td><td class="right" style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--teal)">$4.85</td><td>5 days</td><td style="color:var(--green);font-size:11px;font-weight:600">In Stock</td><td style="font-size:9px;color:var(--muted)">Excel</td></tr>
+        <tr><td><span class="vtag" style="background:#1A2A3A;color:#2A6AB5">80/20 Inc.</span></td><td style="font-family:'IBM Plex Mono',monospace;font-size:10px">8020-1515</td><td>T-Slot Extrusion 1.5x1.5 per ft</td><td class="right" style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--teal)">$7.20</td><td>5 days</td><td style="color:var(--green);font-size:11px;font-weight:600">In Stock</td><td style="font-size:9px;color:var(--muted)">Excel</td></tr>
+        <tr><td><span class="vtag" style="background:#2A1A3A;color:#6B4FD8">Parker Wilkerson</span></td><td style="font-family:'IBM Plex Mono',monospace;font-size:10px">W68G-4AF-RMG</td><td>Filter-Regulator 1/2 NPT</td><td class="right" style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--teal)">$142.00</td><td>7 days</td><td style="color:var(--green);font-size:11px;font-weight:600">In Stock</td><td style="font-size:9px;color:var(--muted)">API</td></tr>
+        <tr><td><span class="vtag" style="background:#2A1A3A;color:#6B4FD8">Parker Legris</span></td><td style="font-family:'IBM Plex Mono',monospace;font-size:10px">3101 04 00</td><td>Push-In Fitting 4mm Straight</td><td class="right" style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--teal)">$2.40</td><td>3 days</td><td style="color:var(--green);font-size:11px;font-weight:600">In Stock</td><td style="font-size:9px;color:var(--muted)">API</td></tr>
+        <tr><td><span class="vtag" style="background:#3A1A1A;color:#C43A2A">Piab</span></td><td style="font-family:'IBM Plex Mono',monospace;font-size:10px">B15</td><td>Vacuum Pump B15</td><td class="right" style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--teal)">$245.00</td><td>10 days</td><td style="color:var(--amber);font-size:11px;font-weight:600">2 weeks</td><td style="font-size:9px;color:var(--muted)">REST API</td></tr>
+        <tr><td><span class="vtag" style="background:#3A2A0A;color:#C4830A">Murrelektronik</span></td><td style="font-family:'IBM Plex Mono',monospace;font-size:10px">7000-12221-0000000</td><td>M12 5-Pin Cordset 2m</td><td class="right" style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--teal)">$18.40</td><td>5 days</td><td style="color:var(--green);font-size:11px;font-weight:600">In Stock</td><td style="font-size:9px;color:var(--muted)">Portal</td></tr>
+        <tr><td><span class="vtag" style="background:#1A3A3A;color:#2A9BB5">Camozzi</span></td><td style="font-family:'IBM Plex Mono',monospace;font-size:10px">10-3272-0753</td><td>Series 10 Cylinder 32x75</td><td class="right" style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--teal)">$68.50</td><td>10 days</td><td style="color:var(--amber);font-size:11px;font-weight:600">2 weeks</td><td style="font-size:9px;color:var(--muted)">Portal RPA</td></tr>
+        <tr><td><span class="vtag" style="background:#2A2A1A;color:#8A8A2A">Omron</span></td><td style="font-family:'IBM Plex Mono',monospace;font-size:10px">E2E-X5MF1</td><td>Proximity Sensor M12 NPN</td><td class="right" style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--teal)">$42.00</td><td>7 days</td><td style="color:var(--green);font-size:11px;font-weight:600">In Stock</td><td style="font-size:9px;color:var(--muted)">Portal RPA</td></tr>
+        <tr><td><span class="vtag" style="background:#1A1A3A;color:#4B4FA0">PHD Inc.</span></td><td style="font-family:'IBM Plex Mono',monospace;font-size:10px">SVR-1/2-2-RN</td><td>Slide Cylinder 1/2 Bore 2in</td><td class="right" style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--teal)">$124.00</td><td>21 days</td><td style="color:var(--red);font-size:11px;font-weight:600">4–6 weeks</td><td style="font-size:9px;color:var(--muted)">Portal RPA</td></tr>
+        <tr id="macRow"><td><span class="vtag" style="background:#3A1A2A;color:#C43A7A">MAC Valves</span></td><td style="font-family:'IBM Plex Mono',monospace;font-size:10px" id="macTablePN">45A-AA1-DDAA-1BA</td><td id="macTableDesc">45 Series 4-Way Valve, 24VDC, 1/8 NPT</td><td class="right" style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--teal)">$186.00</td><td>14 days</td><td style="color:var(--amber);font-size:11px;font-weight:600">2–3 weeks</td><td style="font-size:9px;color:var(--muted)">PDF Parse</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ══ RETURNS ══════════════════════════════════════════════════════════════ -->
+<div id="tab-returns" class="tab-panel">
+  <div class="callout callout-amber" style="margin-bottom:14px">
+    <div class="callout-icon">!</div>
+    <div><div class="callout-title">Returns — Replaces Initials + Date</div><div class="callout-body">Today CSRs write initials and a date. Finding a specific return requires manual searching. Every return below has a structured record with owner, status, and resolution path.</div></div>
+  </div>
+  <div class="panel">
+    <div class="panel-header"><div class="panel-title">Open & Pending Returns</div><div class="panel-badge pb-amber">12 unresolved</div></div>
+    <div class="search-row"><input type="text" placeholder="Search customer, part, vendor..."><select><option value="">All Statuses</option><option>Open</option><option>Pending</option><option>Resolved</option></select></div>
+    <table class="data-table">
+      <thead><tr><th>Customer</th><th>Part #</th><th>Vendor</th><th>Reason</th><th>Opened</th><th>Owner (CSR)</th><th>Acct Mgr</th><th>Status</th></tr></thead>
+      <tbody>
+        <tr><td>Standard Register</td><td style="font-family:'IBM Plex Mono',monospace;font-size:10px">E2E-X5MF1</td><td>Omron</td><td>Wrong part shipped</td><td>2026-03-14</td><td>M. Adams</td><td>B. Wilson</td><td><span class="badge b-open">Open</span></td></tr>
+        <tr><td>Dayton Superior</td><td style="font-family:'IBM Plex Mono',monospace;font-size:10px">E2E-X5MF1</td><td>Omron</td><td>Defective unit</td><td>2026-03-08</td><td>A. Clark</td><td>B. Wilson</td><td><span class="badge b-open">Open</span></td></tr>
+        <tr><td>Crown Equipment</td><td style="font-family:'IBM Plex Mono',monospace;font-size:10px">8020-1010</td><td>80/20 Inc.</td><td>Customer ordered wrong part</td><td>2026-02-28</td><td>T. Greene</td><td>K. Davis</td><td><span class="badge b-pending">Pending</span></td></tr>
+        <tr><td>Standard Register</td><td style="font-family:'IBM Plex Mono',monospace;font-size:10px">ACE-SC400M-1</td><td>Ace Controls</td><td>Price discrepancy</td><td>2026-02-22</td><td>D. Ross</td><td>B. Wilson</td><td><span class="badge b-pending">Pending</span></td></tr>
+        <tr><td>Ohio Gasket</td><td style="font-family:'IBM Plex Mono',monospace;font-size:10px">8020-1010</td><td>80/20 Inc.</td><td>Damaged in transit</td><td>2026-03-18</td><td>M. Adams</td><td>J. Miller</td><td><span class="badge b-open">Open</span></td></tr>
+        <tr><td>Ohio Gasket</td><td style="font-family:'IBM Plex Mono',monospace;font-size:10px">E2E-X5MF1</td><td>Omron</td><td>Wrong part shipped</td><td>2026-03-05</td><td>T. Greene</td><td>J. Miller</td><td><span class="badge b-open">Open</span></td></tr>
+        <tr><td>Ohio Gasket</td><td style="font-family:'IBM Plex Mono',monospace;font-size:10px">W68G-4AF-RMG</td><td>Parker Wilkerson</td><td>Defective unit</td><td>2026-02-18</td><td>A. Clark</td><td>R. Carter</td><td><span class="badge b-pending">Pending</span></td></tr>
+        <tr><td>Cincinnati Milacron</td><td style="font-family:'IBM Plex Mono',monospace;font-size:10px">45A-AA1-DDAA-1BA</td><td>MAC Valves</td><td>Wrong part shipped</td><td>2026-01-30</td><td>D. Ross</td><td>R. Carter</td><td><span class="badge b-pending">Pending</span></td></tr>
+        <tr><td>Huffy Bicycles</td><td style="font-family:'IBM Plex Mono',monospace;font-size:10px">E2E-X5MF1</td><td>Omron</td><td>Customer ordered wrong</td><td>2026-03-22</td><td>M. Adams</td><td>S. Thompson</td><td><span class="badge b-open">Open</span></td></tr>
+        <tr><td>Reynolds &amp; Reynolds</td><td style="font-family:'IBM Plex Mono',monospace;font-size:10px">ACE-SC400M-1</td><td>Ace Controls</td><td>Damaged in transit</td><td>2026-03-01</td><td>T. Greene</td><td>B. Wilson</td><td><span class="badge b-open">Open</span></td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ══ PRICING ERRORS ══════════════════════════════════════════════════════ -->
+<div id="tab-errors" class="tab-panel">
+  <div class="callout callout-red" style="margin-bottom:14px">
+    <div class="callout-icon">!</div>
+    <div><div class="callout-title">Pricing Errors — $13,000/yr Confirmed</div><div class="callout-body">T4 (Customer Service, &lt;1 yr tenure) confirmed this workflow takes 20 hours/week: receive PO with wrong price → manually check portals, spreadsheets, call reps → requote → wait for revised PO. The vendor pricing system eliminates this entirely.</div></div>
+  </div>
+  <div class="panel">
+    <div class="panel-header"><div class="panel-title">Pricing Errors Log</div><div class="panel-badge pb-red">$123.78 YTD (sample)</div></div>
+    <table class="data-table">
+      <thead><tr><th>Date</th><th>Customer</th><th>Part #</th><th>Vendor</th><th class="right">Quoted</th><th class="right">Correct</th><th class="right">Impact</th><th>Found By (CSR)</th><th>Acct Mgr</th><th>Status</th></tr></thead>
+      <tbody>
+        <tr><td>2025-12-04</td><td>Crown Equipment</td><td style="font-family:'IBM Plex Mono',monospace;font-size:10px">ACE-SC400M-1</td><td>Ace Controls</td><td class="right" style="font-family:'IBM Plex Mono',monospace;font-size:11px">$312.40</td><td class="right" style="font-family:'IBM Plex Mono',monospace;font-size:11px">$287.10</td><td class="right" style="color:var(--red);font-weight:600;font-family:'IBM Plex Mono',monospace;font-size:11px">$25.30</td><td>M. Adams</td><td>K. Davis</td><td><span class="badge b-resolved">Resolved</span></td></tr>
+        <tr><td>2025-12-11</td><td>Dayton Superior</td><td style="font-family:'IBM Plex Mono',monospace;font-size:10px">W68G-4AF-RMG</td><td>Parker Wilkerson</td><td class="right" style="font-family:'IBM Plex Mono',monospace;font-size:11px">$198.50</td><td class="right" style="font-family:'IBM Plex Mono',monospace;font-size:11px">$182.00</td><td class="right" style="color:var(--red);font-weight:600;font-family:'IBM Plex Mono',monospace;font-size:11px">$16.50</td><td>T. Greene</td><td>B. Wilson</td><td><span class="badge b-open">Open</span></td></tr>
+        <tr><td>2026-01-14</td><td>Cincinnati Milacron</td><td style="font-family:'IBM Plex Mono',monospace;font-size:10px">ACE-SC400M-1</td><td>Ace Controls</td><td class="right" style="font-family:'IBM Plex Mono',monospace;font-size:11px">$78.90</td><td class="right" style="font-family:'IBM Plex Mono',monospace;font-size:11px">$74.22</td><td class="right" style="color:var(--red);font-weight:600;font-family:'IBM Plex Mono',monospace;font-size:11px">$4.68</td><td>A. Clark</td><td>R. Carter</td><td><span class="badge b-resolved">Resolved</span></td></tr>
+        <tr><td>2026-02-08</td><td>Crown Equipment</td><td style="font-family:'IBM Plex Mono',monospace;font-size:10px">W68G-4AF-RMG</td><td>Parker Wilkerson</td><td class="right" style="font-family:'IBM Plex Mono',monospace;font-size:11px">$267.00</td><td class="right" style="font-family:'IBM Plex Mono',monospace;font-size:11px">$250.02</td><td class="right" style="color:var(--red);font-weight:600;font-family:'IBM Plex Mono',monospace;font-size:11px">$16.98</td><td>D. Ross</td><td>K. Davis</td><td><span class="badge b-open">Open</span></td></tr>
+        <tr><td>2026-03-12</td><td>Robbins &amp; Myers</td><td style="font-family:'IBM Plex Mono',monospace;font-size:10px">8020-1515</td><td>80/20 Inc.</td><td class="right" style="font-family:'IBM Plex Mono',monospace;font-size:11px">$189.40</td><td class="right" style="font-family:'IBM Plex Mono',monospace;font-size:11px">$162.79</td><td class="right" style="color:var(--red);font-weight:600;font-family:'IBM Plex Mono',monospace;font-size:11px">$26.61</td><td>M. Adams</td><td>R. Carter</td><td><span class="badge b-open">Open</span></td></tr>
+      </tbody>
+    </table>
+    <div style="margin-top:14px;padding:12px 14px;background:var(--surface);border-radius:3px;border-left:3px solid var(--red)">
+      <div style="font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:12px;color:var(--red);text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px">Annualized Projection</div>
+      <div style="font-size:12px;color:var(--light);line-height:1.5">At 52 errors/year confirmed in the diagnostic: <strong style="color:var(--red)">$1,083/month</strong> leaving through the cracks. T4 spends 20 hours/week manually correcting these. This system eliminates that workflow entirely.</div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ FINANCIAL ══════════════════════════════════════════════════════════ -->
+<div id="tab-financial" class="tab-panel">
+  <div class="callout callout-amber" style="margin-bottom:14px">
+    <div class="callout-icon">◆</div>
+    <div><div class="callout-title">Financial Overview — Sample Data</div><div class="callout-body">Built from diagnostic inputs: $10M+ annual revenue, 981 active orders, $2,173 avg order value, 600 accounts. Use the filter bar above to cut by account manager or vendor. Real numbers replace these once Answers is connected in Phase 1.</div></div>
+  </div>
+
+  <!-- Hero financial stats — row 1: Revenue & P&L -->
+  <div class="hero-stats" style="grid-template-columns:repeat(6,1fr);margin-bottom:10px">
+    <div class="stat-card sc-teal"><div class="stat-val" style="font-size:24px">$847K</div><div class="stat-lbl">Revenue MTD</div><div class="stat-sub">↑ 6% vs last month</div></div>
+    <div class="stat-card sc-green"><div class="stat-val" style="font-size:24px">$282K</div><div class="stat-lbl">Gross Profit MTD</div><div class="stat-sub">31.4% margin</div></div>
+    <div class="stat-card sc-red"><div class="stat-val" style="font-size:24px">$565K</div><div class="stat-lbl">Total COGS MTD</div><div class="stat-sub">66.6% of revenue</div></div>
+    <div class="stat-card sc-teal"><div class="stat-val" style="font-size:24px">$9.0M</div><div class="stat-lbl">Annual Run Rate</div><div class="stat-sub">Based on 6-mo avg</div></div>
+    <div class="stat-card sc-amber"><div class="stat-val" style="font-size:24px">34%</div><div class="stat-lbl">Margin Target</div><div class="stat-sub">−2.6pts below target</div><div class="stat-delta delta-warn">Gap: $22K MTD</div></div>
+    <div class="stat-card sc-green"><div class="stat-val" style="font-size:24px">$282K</div><div class="stat-lbl">Profit MTD</div><div class="stat-sub">Gross profit this month</div></div>
+  </div>
+  <!-- Hero financial stats — row 2: Order counts -->
+  <div class="hero-stats" style="grid-template-columns:repeat(6,1fr);margin-bottom:16px">
+    <div class="stat-card sc-purple"><div class="stat-val">981</div><div class="stat-lbl">Total Orders</div><div class="stat-sub">All active + fulfilled</div></div>
+    <div class="stat-card sc-teal"><div class="stat-val">592</div><div class="stat-lbl">Open Orders</div><div class="stat-sub">Not yet fulfilled</div></div>
+    <div class="stat-card sc-green"><div class="stat-val">389</div><div class="stat-lbl">Closed / Fulfilled</div><div class="stat-sub">Completed this period</div></div>
+    <div class="stat-card sc-red"><div class="stat-val">134</div><div class="stat-lbl">Late / At Risk</div><div class="stat-sub">Open + past due date</div><div class="stat-delta delta-bad">Action required</div></div>
+    <div class="stat-card sc-amber"><div class="stat-val">47</div><div class="stat-lbl">Backordered</div><div class="stat-sub">Waiting on vendor</div></div>
+    <div class="stat-card sc-teal"><div class="stat-val" style="font-size:20px">$2,173</div><div class="stat-lbl">Avg Order Value</div><div class="stat-sub">From 981 active orders</div></div>
+  </div>
+
+  <div class="grid-2" style="margin-bottom:14px">
+    <!-- Orders Summary by Status -->
+    <div class="panel">
+      <div class="panel-header"><div class="panel-title">Orders — Revenue, Margin & Status</div><div class="panel-badge pb-purple">981 total orders</div></div>
+      <table class="data-table">
+        <thead><tr><th>Status</th><th class="right">Count</th><th class="right">Revenue</th><th class="right">COGS</th><th class="right">Gross Profit</th><th class="right">Margin</th></tr></thead>
+        <tbody>
+          <tr><td><span class="badge b-open">Open</span></td><td class="right">592</td><td class="right" style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--teal)">$1,285,800</td><td class="right" style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--muted)">$858,600</td><td class="right" style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--green)">$427,200</td><td class="right" style="color:var(--green);font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:600">33.2%</td></tr>
+          <tr><td><span class="badge b-resolved">Fulfilled</span></td><td class="right">389</td><td class="right" style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--teal)">$847,000</td><td class="right" style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--muted)">$564,900</td><td class="right" style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--green)">$282,100</td><td class="right" style="color:var(--green);font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:600">33.3%</td></tr>
+          <tr><td><span class="badge b-pending" style="background:var(--redGlow);color:var(--red);border-color:var(--red2)">Late</span></td><td class="right" style="color:var(--red);font-weight:600">134</td><td class="right" style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--teal)">$291,000</td><td class="right" style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--muted)">$198,800</td><td class="right" style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--amber)">$92,200</td><td class="right" style="color:var(--amber);font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:600">31.7%</td></tr>
+          <tr><td><span class="badge" style="background:var(--amberGlow);color:var(--amber);border:1px solid var(--amber2)">Backordered</span></td><td class="right" style="color:var(--amber);font-weight:600">47</td><td class="right" style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--teal)">$102,100</td><td class="right" style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--muted)">$71,500</td><td class="right" style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--amber)">$30,600</td><td class="right" style="color:var(--amber);font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:600">30.0%</td></tr>
+          <tr style="border-top:1px solid var(--border2)"><td style="font-weight:700;color:var(--teal)">All Orders</td><td class="right" style="font-weight:700">981</td><td class="right" style="font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:600;color:var(--teal)">$2,132,800</td><td class="right" style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--muted)">$1,424,000</td><td class="right" style="font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:600;color:var(--green)">$708,800</td><td class="right" style="color:var(--teal);font-family:'IBM Plex Mono',monospace;font-size:12px;font-weight:700">33.2%</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <!-- Quote Pipeline Summary -->
+    <div class="panel">
+      <div class="panel-header"><div class="panel-title">Quote Pipeline — Revenue & Margin</div><div class="panel-badge pb-teal">50 quotes / 90 days</div></div>
+      <table class="data-table">
+        <thead><tr><th>Status</th><th class="right">Count</th><th class="right">Quote Value</th><th class="right">Est. COGS</th><th class="right">Est. GP</th><th class="right">Margin</th></tr></thead>
+        <tbody>
+          <tr><td><span class="badge b-open">Open</span></td><td class="right">17</td><td class="right" style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--teal)">$172,000</td><td class="right" style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--muted)">$110,700</td><td class="right" style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--teal)">$61,300</td><td class="right" style="color:var(--teal);font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:600">35.6%</td></tr>
+          <tr><td><span class="badge b-resolved">Won</span></td><td class="right">16</td><td class="right" style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--teal)">$126,000</td><td class="right" style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--muted)">$81,000</td><td class="right" style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--green)">$45,000</td><td class="right" style="color:var(--green);font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:600">35.7%</td></tr>
+          <tr><td><span class="badge b-lost">Lost</span></td><td class="right">7</td><td class="right" style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--muted)">$47,000</td><td class="right" style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--muted)">$33,300</td><td class="right" style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--red)">$13,700</td><td class="right" style="color:var(--red);font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:600">29.1%</td></tr>
+          <tr><td><span class="badge b-expired">Expired</span></td><td class="right">10</td><td class="right" style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--muted)">$99,000</td><td class="right" style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--muted)">$67,300</td><td class="right" style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--amber)">$31,700</td><td class="right" style="color:var(--amber);font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:600">32.0%</td></tr>
+          <tr style="border-top:1px solid var(--border2)"><td style="font-weight:700;color:var(--teal)">Total</td><td class="right" style="font-weight:700">50</td><td class="right" style="font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:600;color:var(--teal)">$444,000</td><td class="right" style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--muted)">$292,300</td><td class="right" style="font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:600;color:var(--green)">$151,700</td><td class="right" style="color:var(--teal);font-family:'IBM Plex Mono',monospace;font-size:12px;font-weight:700">34.2%</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="grid-2" style="margin-bottom:14px">
+    <div class="panel">
+      <div class="panel-header"><div class="panel-title">Monthly Revenue — Last 6 Months</div><div class="panel-badge pb-teal">$9.0M run rate</div></div>
+      <div style="display:flex;align-items:flex-end;gap:8px;height:120px;margin-bottom:10px">
+        <div style="display:flex;flex-direction:column;align-items:center;gap:4px;flex:1"><div style="font-family:'IBM Plex Mono',monospace;font-size:9px;color:var(--muted)">$741K</div><div style="width:100%;background:var(--teal3);border-top:2px solid var(--teal2);border-radius:2px 2px 0 0;height:74px"></div><div style="font-family:'IBM Plex Mono',monospace;font-size:8px;color:var(--muted)">Oct</div></div>
+        <div style="display:flex;flex-direction:column;align-items:center;gap:4px;flex:1"><div style="font-family:'IBM Plex Mono',monospace;font-size:9px;color:var(--muted)">$698K</div><div style="width:100%;background:var(--teal3);border-top:2px solid var(--teal2);border-radius:2px 2px 0 0;height:70px"></div><div style="font-family:'IBM Plex Mono',monospace;font-size:8px;color:var(--muted)">Nov</div></div>
+        <div style="display:flex;flex-direction:column;align-items:center;gap:4px;flex:1"><div style="font-family:'IBM Plex Mono',monospace;font-size:9px;color:var(--muted)">$612K</div><div style="width:100%;background:var(--teal3);border-top:2px solid var(--teal2);border-radius:2px 2px 0 0;height:61px"></div><div style="font-family:'IBM Plex Mono',monospace;font-size:8px;color:var(--muted)">Dec</div></div>
+        <div style="display:flex;flex-direction:column;align-items:center;gap:4px;flex:1"><div style="font-family:'IBM Plex Mono',monospace;font-size:9px;color:var(--muted)">$804K</div><div style="width:100%;background:var(--teal3);border-top:2px solid var(--teal2);border-radius:2px 2px 0 0;height:80px"></div><div style="font-family:'IBM Plex Mono',monospace;font-size:8px;color:var(--muted)">Jan</div></div>
+        <div style="display:flex;flex-direction:column;align-items:center;gap:4px;flex:1"><div style="font-family:'IBM Plex Mono',monospace;font-size:9px;color:var(--muted)">$799K</div><div style="width:100%;background:var(--teal3);border-top:2px solid var(--teal2);border-radius:2px 2px 0 0;height:80px"></div><div style="font-family:'IBM Plex Mono',monospace;font-size:8px;color:var(--muted)">Feb</div></div>
+        <div style="display:flex;flex-direction:column;align-items:center;gap:4px;flex:1"><div style="font-family:'IBM Plex Mono',monospace;font-size:9px;color:var(--teal);font-weight:600">$847K</div><div style="width:100%;background:#1A6B7D;border-top:2px solid var(--teal);border-radius:2px 2px 0 0;height:100px"></div><div style="font-family:'IBM Plex Mono',monospace;font-size:8px;color:var(--teal);font-weight:600">Mar ▶</div></div>
+      </div>
+      <div style="display:flex;gap:14px">
+        <div><div style="font-family:'IBM Plex Mono',monospace;font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.1em">6-Mo Avg</div><div style="font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:20px;color:var(--teal)">$750K</div></div>
+        <div><div style="font-family:'IBM Plex Mono',monospace;font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.1em">Run Rate</div><div style="font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:20px;color:var(--teal)">$9.0M</div></div>
+        <div><div style="font-family:'IBM Plex Mono',monospace;font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.1em">MoM Growth</div><div style="font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:20px;color:var(--green)">+6.0%</div></div>
+      </div>
+    </div>
+    <!-- Margin by Rep -->
+    <div class="panel">
+      <div class="panel-header"><div class="panel-title">Margin by Account Manager</div><div class="panel-badge pb-amber">Target: 34%</div></div>
+      <div class="bar-chart">
+        <div class="bar-row"><div class="bar-label">K. Davis</div><div class="bar-track"><div class="bar-fill" style="width:100%;background:#1A3A20"><span style="color:var(--green)">38.2%  —  $75,900 GP</span></div></div></div>
+        <div class="bar-row"><div class="bar-label">R. Carter</div><div class="bar-track"><div class="bar-fill" style="width:94%;background:#1A3A20"><span style="color:var(--green)">36.1%  —  $77,700 GP</span></div></div></div>
+        <div class="bar-row"><div class="bar-label">S. Thompson</div><div class="bar-track"><div class="bar-fill" style="width:86%;background:#1A3020"><span style="color:var(--teal)">32.8%  —  $57,800 GP</span></div></div></div>
+        <div class="bar-row"><div class="bar-label">J. Miller</div><div class="bar-track"><div class="bar-fill" style="width:78%;background:#2A2A10"><span style="color:var(--amber)">29.6%  —  $42,000 GP</span></div></div></div>
+        <div class="bar-row"><div class="bar-label">B. Wilson</div><div class="bar-track"><div class="bar-fill" style="width:65%;background:#3A1A10"><span style="color:var(--red)">24.8%  —  $28,700 GP</span></div></div></div>
+        <div style="margin-top:10px;padding:8px 10px;background:var(--surface);border-radius:2px;border-left:2px solid var(--red);font-size:11px;color:var(--light)">B. Wilson: 90 orders, 24.8% margin. Most orders, lowest margin. High volume + discounting pattern.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="grid-2" style="margin-bottom:14px">
+    <!-- Top Customers -->
+    <div class="panel">
+      <div class="panel-header"><div class="panel-title">Top Customers — Revenue vs Margin</div><div class="panel-badge pb-amber">600 active accounts</div></div>
+      <table class="data-table">
+        <thead><tr><th>Customer</th><th class="right">Revenue</th><th class="right">COGS</th><th class="right">Gross Profit</th><th class="right">Margin</th><th>Orders</th><th>Acct Mgr</th></tr></thead>
+        <tbody>
+          <tr><td style="font-weight:600">Crown Equipment</td><td class="right" style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--teal)">$142,800</td><td class="right" style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--muted)">$89,300</td><td class="right" style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--green)">$53,500</td><td class="right"><span style="color:var(--green);font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:600">37.4%</span></td><td>58</td><td style="font-size:11px">K. Davis</td></tr>
+          <tr><td style="font-weight:600">Cincinnati Milacron</td><td class="right" style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--teal)">$118,400</td><td class="right" style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--muted)">$76,000</td><td class="right" style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--green)">$42,400</td><td class="right"><span style="color:var(--green);font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:600">35.8%</span></td><td>44</td><td style="font-size:11px">R. Carter</td></tr>
+          <tr><td style="font-weight:600">Yaskawa America</td><td class="right" style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--teal)">$96,200</td><td class="right" style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--muted)">$64,300</td><td class="right" style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--teal)">$31,900</td><td class="right"><span style="color:var(--teal);font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:600">33.1%</span></td><td>38</td><td style="font-size:11px">S. Thompson</td></tr>
+          <tr><td style="font-weight:600">Dayton Superior</td><td class="right" style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--teal)">$87,600</td><td class="right" style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--muted)">$62,700</td><td class="right" style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--amber)">$24,900</td><td class="right"><span style="color:var(--amber);font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:600">28.4%</span></td><td>42</td><td style="font-size:11px">B. Wilson</td></tr>
+          <tr><td style="font-weight:600">Reynolds &amp; Reynolds</td><td class="right" style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--teal)">$68,900</td><td class="right" style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--muted)">$53,700</td><td class="right" style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--red)">$15,200</td><td class="right"><span style="color:var(--red);font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:600">22.1%</span></td><td>51</td><td style="font-size:11px">B. Wilson</td></tr>
+          <tr><td style="font-weight:600">Standard Register</td><td class="right" style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--teal)">$54,200</td><td class="right" style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--muted)">$42,600</td><td class="right" style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--red)">$11,600</td><td class="right"><span style="color:var(--red);font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:600">21.4%</span></td><td>36</td><td style="font-size:11px">B. Wilson</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <!-- Revenue by Vendor -->
+    <div class="panel">
+      <div class="panel-header"><div class="panel-title">Revenue &amp; Margin by Vendor Line</div><div class="panel-badge pb-teal">Top 10 active</div></div>
+      <div class="bar-chart">
+        <div class="bar-row"><div class="bar-label" style="font-size:11px">Parker</div><div class="bar-track"><div class="bar-fill" style="width:100%;background:#1A3A20"><span style="color:var(--green)">$198K  |  36.8%</span></div></div></div>
+        <div class="bar-row"><div class="bar-label" style="font-size:11px">Omron</div><div class="bar-track"><div class="bar-fill" style="width:82%;background:#1A3A20"><span style="color:var(--green)">$162K  |  34.2%</span></div></div></div>
+        <div class="bar-row"><div class="bar-label" style="font-size:11px">Piab</div><div class="bar-track"><div class="bar-fill" style="width:70%;background:#1A3020"><span style="color:var(--teal)">$138K  |  32.1%</span></div></div></div>
+        <div class="bar-row"><div class="bar-label" style="font-size:11px">MAC Valves</div><div class="bar-track"><div class="bar-fill" style="width:60%;background:#2A2A10"><span style="color:var(--amber)">$118K  |  29.4%</span></div></div></div>
+        <div class="bar-row"><div class="bar-label" style="font-size:11px">PHD Inc.</div><div class="bar-track"><div class="bar-fill" style="width:52%;background:#2A2A10"><span style="color:var(--amber)">$102K  |  28.7%</span></div></div></div>
+        <div class="bar-row"><div class="bar-label" style="font-size:11px">Ace Controls</div><div class="bar-track"><div class="bar-fill" style="width:44%;background:#2A1A10"><span style="color:var(--amber)">$87K  |  27.8%</span></div></div></div>
+        <div class="bar-row"><div class="bar-label" style="font-size:11px">80/20 Inc.</div><div class="bar-track"><div class="bar-fill" style="width:36%;background:#3A1A10"><span style="color:var(--red)">$72K  |  24.1%</span></div></div></div>
+        <div class="bar-row"><div class="bar-label" style="font-size:11px">Murrelektronik</div><div class="bar-track"><div class="bar-fill" style="width:30%;background:#3A1A10"><span style="color:var(--red)">$58K  |  23.6%</span></div></div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Commission visibility -->
+  <div class="panel" style="margin-bottom:14px">
+    <div class="panel-header"><div class="panel-title">Commission Visibility — Real-Time Rep Performance</div><div class="panel-badge pb-red">Paid annually today — no in-year view</div></div>
+    <div class="callout callout-red" style="margin-bottom:14px">
+      <div class="callout-icon">!</div>
+      <div><div class="callout-title">The number salespeople have never seen</div><div class="callout-body">Commission at Voelker is paid annually. Salespeople can't track their own performance during the year. This table is what they'd see in real time — first time ever.</div></div>
+    </div>
+    <table class="data-table">
+      <thead><tr><th>Rep</th><th class="right">Revenue MTD</th><th class="right">Gross Profit</th><th class="right">Margin</th><th class="right">Win Rate</th><th class="right">Est. Commission MTD</th><th class="right">YTD Commission</th><th>vs Target</th></tr></thead>
+      <tbody>
+        <tr><td style="font-weight:600">K. Davis</td><td class="right" style="font-family:'IBM Plex Mono',monospace;font-size:11px">$198,400</td><td class="right" style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--green)">$75,900</td><td class="right" style="color:var(--green);font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:600">38.2%</td><td class="right" style="color:var(--green);font-family:'IBM Plex Mono',monospace;font-size:11px">100%</td><td class="right" style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--green);font-weight:600">~$5,313</td><td class="right" style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--teal)">~$15,940</td><td><span class="badge b-resolved">+12% ahead</span></td></tr>
+        <tr><td style="font-weight:600">R. Carter</td><td class="right" style="font-family:'IBM Plex Mono',monospace;font-size:11px">$214,800</td><td class="right" style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--green)">$77,700</td><td class="right" style="color:var(--green);font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:600">36.1%</td><td class="right" style="color:var(--teal);font-family:'IBM Plex Mono',monospace;font-size:11px">80%</td><td class="right" style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--green);font-weight:600">~$5,439</td><td class="right" style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--teal)">~$16,318</td><td><span class="badge b-resolved">+8% ahead</span></td></tr>
+        <tr><td style="font-weight:600">S. Thompson</td><td class="right" style="font-family:'IBM Plex Mono',monospace;font-size:11px">$176,200</td><td class="right" style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--teal)">$57,800</td><td class="right" style="color:var(--teal);font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:600">32.8%</td><td class="right" style="color:var(--teal);font-family:'IBM Plex Mono',monospace;font-size:11px">100%</td><td class="right" style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--teal);font-weight:600">~$4,046</td><td class="right" style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--teal)">~$12,138</td><td><span class="badge b-open">On pace</span></td></tr>
+        <tr><td style="font-weight:600">J. Miller</td><td class="right" style="font-family:'IBM Plex Mono',monospace;font-size:11px">$142,100</td><td class="right" style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--amber)">$42,000</td><td class="right" style="color:var(--amber);font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:600">29.6%</td><td class="right" style="color:var(--amber);font-family:'IBM Plex Mono',monospace;font-size:11px">60%</td><td class="right" style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--amber);font-weight:600">~$2,940</td><td class="right" style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--amber)">~$8,820</td><td><span class="badge b-pending">-6% behind</span></td></tr>
+        <tr><td style="font-weight:600">B. Wilson</td><td class="right" style="font-family:'IBM Plex Mono',monospace;font-size:11px">$115,500</td><td class="right" style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--red)">$28,700</td><td class="right" style="color:var(--red);font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:600">24.8%</td><td class="right" style="color:var(--red);font-family:'IBM Plex Mono',monospace;font-size:11px">20%</td><td class="right" style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--red);font-weight:600">~$2,009</td><td class="right" style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--red)">~$6,027</td><td><span class="badge b-lost">-21% behind</span></td></tr>
+      </tbody>
+    </table>
+    <div style="font-size:11px;color:var(--muted);margin-top:10px">Commission estimated at 7% of gross profit. Actual formula entered once documented in Phase 2.</div>
+  </div>
+</div>
+
+<!-- ══ INVENTORY ══════════════════════════════════════════════════════════ -->
+<div id="tab-inventory" class="tab-panel">
+  <div class="callout callout-purple" style="margin-bottom:14px;border-left-color:var(--purple);background:var(--purpleGlow)">
+    <div class="callout-icon">◆</div>
+    <div><div class="callout-title" style="color:var(--purple)">Inventory Control — Reorder Points & Stock Status</div><div class="callout-body">T7 confirmed inventory inaccuracy is causing order delays — items sold that aren't in stock. This tab shows on-hand quantities vs reorder points, flags critical stock levels, and connects to the vendor pricing layer so reorder cost is visible at the same time. A WMS requirement for ERP selection.</div></div>
+  </div>
+
+  <div class="hero-stats" style="grid-template-columns:repeat(5,1fr);margin-bottom:16px">
+    <div class="stat-card sc-purple"><div class="stat-val">87</div><div class="stat-lbl">SKUs Tracked</div><div class="stat-sub">Stocked items</div></div>
+    <div class="stat-card sc-red"><div class="stat-val">12</div><div class="stat-lbl">Below Reorder</div><div class="stat-sub">Need immediate PO</div><div class="stat-delta delta-bad">Action required</div></div>
+    <div class="stat-card sc-amber"><div class="stat-val">8</div><div class="stat-lbl">Watch Level</div><div class="stat-sub">Within 20% of reorder</div></div>
+    <div class="stat-card sc-green"><div class="stat-val">67</div><div class="stat-lbl">Adequate Stock</div><div class="stat-sub">Above reorder point</div></div>
+    <div class="stat-card sc-red"><div class="stat-val">3</div><div class="stat-lbl">Overstock</div><div class="stat-sub">More than 3× reorder qty</div></div>
+  </div>
+
+  <div class="panel">
+    <div class="panel-header"><div class="panel-title">Stock Levels vs Reorder Points</div><div class="panel-badge pb-red">12 items need PO now</div></div>
+    <div class="search-row">
+      <input type="text" placeholder="Search part number, description, vendor...">
+      <select><option value="">All Stock Status</option><option>Critical — Below Reorder</option><option>Watch — Near Reorder</option><option>Adequate</option><option>Overstock</option></select>
+      <select><option value="">All Vendors</option><option>Ace Controls</option><option>80/20 Inc.</option><option>Parker Wilkerson</option><option>Piab</option><option>Omron</option><option>PHD Inc.</option><option>MAC Valves</option></select>
+    </div>
+    <table class="data-table">
+      <thead><tr><th>Part #</th><th>Description</th><th>Vendor</th><th class="right">On Hand</th><th class="right">Reorder Pt</th><th class="right">Reorder Qty</th><th class="right">Unit Cost</th><th class="right">Reorder Cost</th><th>Lead Time</th><th>Status</th><th>Stock Visual</th></tr></thead>
+      <tbody>
+        <tr>
+          <td style="font-family:'IBM Plex Mono',monospace;font-size:10px">ACE-SC400M-1</td><td>Shock Absorber SC400M</td><td>Ace Controls</td>
+          <td class="right" style="color:var(--red);font-weight:600">2</td><td class="right">10</td><td class="right">25</td>
+          <td class="right" style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--muted)">$27.12</td>
+          <td class="right" style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--teal)">$678</td>
+          <td>3 days</td><td><span class="badge b-critical">Critical</span></td>
+          <td><div class="inv-gauge stock-critical"><div class="inv-bar-outer"><div class="inv-bar-inner" style="width:20%"></div></div></div></td>
+        </tr>
+        <tr>
+          <td style="font-family:'IBM Plex Mono',monospace;font-size:10px">E2E-X5MF1</td><td>Proximity Sensor M12 NPN</td><td>Omron</td>
+          <td class="right" style="color:var(--red);font-weight:600">1</td><td class="right">8</td><td class="right">20</td>
+          <td class="right" style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--muted)">$29.40</td>
+          <td class="right" style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--teal)">$588</td>
+          <td>7 days</td><td><span class="badge b-critical">Critical</span></td>
+          <td><div class="inv-gauge stock-critical"><div class="inv-bar-outer"><div class="inv-bar-inner" style="width:12%"></div></div></div></td>
+        </tr>
+        <tr>
+          <td style="font-family:'IBM Plex Mono',monospace;font-size:10px">45A-AA1-DDAA-1BA</td><td>MAC Valves 45 Series 4-Way</td><td>MAC Valves</td>
+          <td class="right" style="color:var(--red);font-weight:600">0</td><td class="right">5</td><td class="right">10</td>
+          <td class="right" style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--muted)">$130.20</td>
+          <td class="right" style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--teal)">$1,302</td>
+          <td>14 days</td><td><span class="badge b-critical">Critical</span></td>
+          <td><div class="inv-gauge stock-critical"><div class="inv-bar-outer"><div class="inv-bar-inner" style="width:0%"></div></div></div></td>
+        </tr>
+        <tr>
+          <td style="font-family:'IBM Plex Mono',monospace;font-size:10px">ACE-MC150M-1</td><td>Mini Compensator MC150M</td><td>Ace Controls</td>
+          <td class="right" style="color:var(--amber);font-weight:600">9</td><td class="right">8</td><td class="right">20</td>
+          <td class="right" style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--muted)">$17.10</td>
+          <td class="right" style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--teal)">$342</td>
+          <td>2 days</td><td><span class="badge b-watch">Watch</span></td>
+          <td><div class="inv-gauge stock-low"><div class="inv-bar-outer"><div class="inv-bar-inner" style="width:45%"></div></div></div></td>
+        </tr>
+        <tr>
+          <td style="font-family:'IBM Plex Mono',monospace;font-size:10px">W68G-4AF-RMG</td><td>Filter-Regulator 1/2 NPT</td><td>Parker Wilkerson</td>
+          <td class="right" style="color:var(--amber);font-weight:600">7</td><td class="right">6</td><td class="right">15</td>
+          <td class="right" style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--muted)">$99.40</td>
+          <td class="right" style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--teal)">$1,491</td>
+          <td>7 days</td><td><span class="badge b-watch">Watch</span></td>
+          <td><div class="inv-gauge stock-low"><div class="inv-bar-outer"><div class="inv-bar-inner" style="width:47%"></div></div></div></td>
+        </tr>
+        <tr>
+          <td style="font-family:'IBM Plex Mono',monospace;font-size:10px">8020-1010</td><td>T-Slot Extrusion 1x1 per ft</td><td>80/20 Inc.</td>
+          <td class="right" style="color:var(--green)">142</td><td class="right">50</td><td class="right">100</td>
+          <td class="right" style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--muted)">$3.40</td>
+          <td class="right" style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--teal)">$340</td>
+          <td>5 days</td><td><span class="badge b-low">Adequate</span></td>
+          <td><div class="inv-gauge stock-ok"><div class="inv-bar-outer"><div class="inv-bar-inner" style="width:100%"></div></div></div></td>
+        </tr>
+        <tr>
+          <td style="font-family:'IBM Plex Mono',monospace;font-size:10px">SVR-1/2-2-RN</td><td>PHD Slide Cylinder 1/2 Bore</td><td>PHD Inc.</td>
+          <td class="right" style="color:var(--green)">22</td><td class="right">4</td><td class="right">8</td>
+          <td class="right" style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--muted)">$86.80</td>
+          <td class="right" style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--teal)">$694</td>
+          <td>21 days</td><td><span class="badge b-low">Adequate</span></td>
+          <td><div class="inv-gauge stock-ok"><div class="inv-bar-outer"><div class="inv-bar-inner" style="width:88%"></div></div></div></td>
+        </tr>
+        <tr>
+          <td style="font-family:'IBM Plex Mono',monospace;font-size:10px">B15</td><td>Piab Vacuum Pump B15</td><td>Piab</td>
+          <td class="right" style="color:var(--purple)">41</td><td class="right">5</td><td class="right">10</td>
+          <td class="right" style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--muted)">$171.50</td>
+          <td class="right" style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--teal)">$1,715</td>
+          <td>10 days</td><td><span class="badge" style="background:var(--purpleGlow);color:var(--purple);border:1px solid var(--purple2)">Overstock</span></td>
+          <td><div class="inv-gauge stock-over"><div class="inv-bar-outer"><div class="inv-bar-inner" style="width:100%"></div></div></div></td>
+        </tr>
+        <tr>
+          <td style="font-family:'IBM Plex Mono',monospace;font-size:10px">ACE-SC600M-1</td><td>Shock Absorber SC600M</td><td>Ace Controls</td>
+          <td class="right" style="color:var(--green)">18</td><td class="right">8</td><td class="right">20</td>
+          <td class="right" style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--muted)">$43.75</td>
+          <td class="right" style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--teal)">$875</td>
+          <td>3 days</td><td><span class="badge b-low">Adequate</span></td>
+          <td><div class="inv-gauge stock-ok"><div class="inv-bar-outer"><div class="inv-bar-inner" style="width:90%"></div></div></div></td>
+        </tr>
+        <tr>
+          <td style="font-family:'IBM Plex Mono',monospace;font-size:10px">7000-12221-0000000</td><td>Murr M12 5-Pin Cordset 2m</td><td>Murrelektronik</td>
+          <td class="right" style="color:var(--red);font-weight:600">3</td><td class="right">10</td><td class="right">25</td>
+          <td class="right" style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--muted)">$12.88</td>
+          <td class="right" style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--teal)">$322</td>
+          <td>5 days</td><td><span class="badge b-critical">Critical</span></td>
+          <td><div class="inv-gauge stock-critical"><div class="inv-bar-outer"><div class="inv-bar-inner" style="width:30%"></div></div></div></td>
+        </tr>
+      </tbody>
+    </table>
+    <div style="margin-top:14px;padding:12px 14px;background:var(--surface);border-radius:3px;border-left:3px solid var(--purple)">
+      <div style="font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:12px;color:var(--purple);text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px">Reorder Summary</div>
+      <div style="font-size:12px;color:var(--light);line-height:1.5">12 items below reorder point. Total reorder value: <strong style="color:var(--teal)">~$8,400</strong>. Critical items (0 stock): MAC Valves 45A-AA1-DDAA-1BA — 14-day lead time, orders may already be affected. Reorder points auto-update as sales velocity data builds in this system.</div>
+    </div>
+  </div>
+</div>
+
+</div><!-- end main -->
+
+<!-- FOOTER -->
+<div class="footer">
+  <div class="footer-l">VAULT NEURON  |  VOELKER CONTROLS  |  VN-260326-113553  |  PHASE 1 DEMO  |  APRIL 2026</div>
+  <div class="footer-r">Not a tool. Not a consultant. The architecture in between.</div>
+</div>
+
+<script>
+// ── TAB NAVIGATION ────────────────────────────────────────────────────────
+function showTab(name, el) {
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('tab-' + name).classList.add('active');
+  el.classList.add('active');
+}
+
+// ── GLOBAL FILTERS ────────────────────────────────────────────────────────
+function applyGlobalFilter() {
+  const am = document.getElementById('gFilterAM').value;
+  const csr = document.getElementById('gFilterCSR').value;
+  const vendor = document.getElementById('gFilterVendor').value;
+  const active = am || csr || vendor;
+  document.getElementById('filterBadge').classList.toggle('show', !!active);
+
+  // Filter all tables that have AM / CSR / Vendor columns
+  document.querySelectorAll('.data-table tbody tr').forEach(row => {
+    const text = row.textContent;
+    const matchAM = !am || text.includes(am);
+    const matchCSR = !csr || text.includes(csr);
+    const matchVendor = !vendor || text.includes(vendor);
+    row.style.display = (matchAM && matchCSR && matchVendor) ? '' : 'none';
+  });
+}
+
+function clearFilters() {
+  document.getElementById('gFilterAM').value = '';
+  document.getElementById('gFilterCSR').value = '';
+  document.getElementById('gFilterVendor').value = '';
+  document.getElementById('filterBadge').classList.remove('show');
+  document.querySelectorAll('.data-table tbody tr').forEach(r => r.style.display = '');
+}
+
+// ── VENDOR PRICING SEARCH ────────────────────────────────────────────────
+function filterTable() {
+  const search = document.getElementById('searchInput').value.toLowerCase();
+  const vendor = document.getElementById('vendorFilter').value.toLowerCase();
+  document.querySelectorAll('#pricingTable tbody tr').forEach(row => {
+    const text = row.textContent.toLowerCase();
+    row.style.display = (!search || text.includes(search)) && (!vendor || text.includes(vendor)) ? '' : 'none';
+  });
+}
+
+function filterOrders(val) {
+  const v = val.toLowerCase();
+  document.querySelectorAll('#ordersTable tbody tr').forEach(row => {
+    row.style.display = !v || row.textContent.toLowerCase().includes(v) ? '' : 'none';
+  });
+}
+
+function filterOrderStatus(val) {
+  const v = val.toLowerCase();
+  document.querySelectorAll('#ordersTable tbody tr').forEach(row => {
+    row.style.display = !v || row.textContent.toLowerCase().includes(v) ? '' : 'none';
+  });
+}
+
+// ── MAC VALVES PART NUMBER BUILDER ────────────────────────────────────────
+const macDescriptions = {
+  '45A': '45 Series 4-Way General Purpose',
+  '56C': '56C Series Pilot Operated',
+  '35A': '35A Series 3-Way',
+  '92A': '92A Series Miniature',
+  '6300D': '6300D Series Stainless Body',
+};
+const solenoidDesc = {
+  'AA1': 'Single Solenoid, Spring Return',
+  'AB1': 'Double Solenoid',
+  'AA2': 'Single Solenoid, Detent',
+  'AC1': 'Single Solenoid, No Spring',
+};
+const voltageDesc = {
+  'DDAA': '24VDC',
+  'DJAA': '120VAC 60Hz',
+  'DCAA': '12VDC',
+  'DNAA': '24VAC 60Hz',
+};
+const portDesc = {
+  '1BA': '1/8 NPT, Standard',
+  '1BB': '1/8 NPT, Buna Seals',
+  '1CA': '1/4 NPT, Standard',
+  '1CB': '1/4 NPT, Buna Seals',
+  '1DA': '3/8 NPT, Standard',
+};
+
+function buildMacPN() {
+  const series = document.getElementById('macSeries').value;
+  const sol = document.getElementById('macSolenoid').value;
+  const volt = document.getElementById('macVoltage').value;
+  const port = document.getElementById('macPort').value;
+  const pnEl = document.getElementById('macPN');
+  const descEl = document.getElementById('macDesc');
+  const copyBtn = document.getElementById('macCopyBtn');
+  const searchBtn = document.getElementById('macSearchBtn');
+  const warnEl = document.getElementById('macWarn');
+
+  if (!series || !sol || !volt || !port) {
+    const filled = [series, sol, volt, port].filter(Boolean).length;
+    pnEl.textContent = filled > 0 ? `${series || '??'}–${sol || '??'}–${volt || '??'}–${port || '??'}` : '— Select all fields above —';
+    descEl.textContent = filled > 0 ? `${filled} of 4 fields selected — complete all fields to generate valid part number` : 'Select series, solenoid config, voltage, and port size.';
+    copyBtn.disabled = true;
+    searchBtn.disabled = true;
+    warnEl.style.display = filled > 0 ? 'block' : 'none';
+    return;
+  }
+
+  const pn = `${series}-${sol}-${volt}-${port}`;
+  pnEl.textContent = pn;
+  descEl.textContent = `${macDescriptions[series]}, ${solenoidDesc[sol]}, ${voltageDesc[volt]}, ${portDesc[port]}`;
+  copyBtn.disabled = false;
+  searchBtn.disabled = false;
+  warnEl.style.display = 'none';
+
+  // Update the MAC row in the pricing table
+  document.getElementById('macTablePN').textContent = pn;
+  document.getElementById('macTableDesc').textContent = `${macDescriptions[series]}, ${voltageDesc[volt]}, ${portDesc[port]}`;
+}
+
+function copyMacPN() {
+  const pn = document.getElementById('macPN').textContent;
+  if (pn === '— Select all fields above —') return;
+  navigator.clipboard.writeText(pn).catch(() => {});
+  const btn = document.getElementById('macCopyBtn');
+  btn.textContent = '✓ Copied!';
+  btn.classList.add('copied');
+  setTimeout(() => { btn.textContent = 'Copy Part #'; btn.classList.remove('copied'); }, 2000);
+}
+
+function searchMacPN() {
+  const pn = document.getElementById('macPN').textContent;
+  if (!pn || pn.includes('—')) return;
+  // Switch to vendors tab and search
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('tab-vendors').classList.add('active');
+  document.querySelectorAll('.nav-tab').forEach((t, i) => {
+    if (t.textContent.trim() === 'Vendor Pricing') t.classList.add('active');
+  });
+  document.getElementById('searchInput').value = pn;
+  filterTable();
+  document.getElementById('searchInput').scrollIntoView({ behavior: 'smooth' });
+}
+</script>
+</body>
+</html>
