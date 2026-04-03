@@ -1,0 +1,1112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Voelker Controls — Leadership Dashboard · Phase 1</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Syne:wght@400;600;700;800&display=swap');
+
+  :root {
+    --bg: #08080F;
+    --surface: #0E0E1A;
+    --surface2: #13131F;
+    --border: #1E1E2E;
+    --purple: #7C3AED;
+    --purple-dim: #4C1D95;
+    --purple-glow: rgba(124,58,237,0.15);
+    --green: #10B981;
+    --red: #EF4444;
+    --amber: #F59E0B;
+    --text: #E2E8F0;
+    --text-dim: #64748B;
+    --text-mid: #94A3B8;
+    --accent: #A78BFA;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Syne', sans-serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* Grid texture */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(124,58,237,0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(124,58,237,0.03) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .header {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    background: rgba(8,8,15,0.95);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--border);
+    padding: 12px 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .header-left {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+
+  .logo-mark {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    color: var(--purple);
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+  }
+
+  .divider-v {
+    width: 1px;
+    height: 20px;
+    background: var(--border);
+  }
+
+  .header-title {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--text);
+    letter-spacing: 0.05em;
+  }
+
+  .header-badge {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px;
+    background: var(--purple-glow);
+    border: 1px solid var(--purple-dim);
+    color: var(--accent);
+    padding: 3px 10px;
+    border-radius: 2px;
+    letter-spacing: 0.1em;
+  }
+
+  .header-right {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .last-updated {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px;
+    color: var(--text-dim);
+  }
+
+  .live-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--green);
+    animation: pulse 2s infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.3; }
+  }
+
+  .main {
+    position: relative;
+    z-index: 1;
+    padding: 24px;
+    max-width: 1400px;
+    margin: 0 auto;
+  }
+
+  /* Filter bar */
+  .filter-bar {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 24px;
+    flex-wrap: wrap;
+    align-items: center;
+  }
+
+  .filter-label {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px;
+    color: var(--text-dim);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    margin-right: 4px;
+  }
+
+  .filter-btn {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    padding: 6px 14px;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    color: var(--text-mid);
+    border-radius: 2px;
+    cursor: pointer;
+    transition: all 0.15s;
+    letter-spacing: 0.05em;
+  }
+
+  .filter-btn:hover, .filter-btn.active {
+    border-color: var(--purple);
+    color: var(--accent);
+    background: var(--purple-glow);
+  }
+
+  select.filter-select {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    padding: 6px 14px;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    color: var(--text-mid);
+    border-radius: 2px;
+    cursor: pointer;
+    outline: none;
+    letter-spacing: 0.05em;
+  }
+
+  select.filter-select:focus {
+    border-color: var(--purple);
+    color: var(--accent);
+  }
+
+  /* KPI row */
+  .kpi-row {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+    margin-bottom: 20px;
+  }
+
+  .kpi-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    padding: 20px;
+    border-radius: 4px;
+    position: relative;
+    overflow: hidden;
+    cursor: pointer;
+    transition: border-color 0.2s;
+  }
+
+  .kpi-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: var(--purple);
+  }
+
+  .kpi-card.green::before { background: var(--green); }
+  .kpi-card.red::before { background: var(--red); }
+  .kpi-card.amber::before { background: var(--amber); }
+
+  .kpi-card:hover { border-color: var(--purple); }
+
+  .kpi-label {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px;
+    color: var(--text-dim);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    margin-bottom: 10px;
+  }
+
+  .kpi-value {
+    font-size: 28px;
+    font-weight: 800;
+    color: var(--text);
+    line-height: 1;
+    margin-bottom: 6px;
+  }
+
+  .kpi-value.red { color: var(--red); }
+  .kpi-value.green { color: var(--green); }
+  .kpi-value.amber { color: var(--amber); }
+
+  .kpi-sub {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px;
+    color: var(--text-dim);
+  }
+
+  .kpi-delta {
+    position: absolute;
+    top: 16px;
+    right: 16px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px;
+    padding: 3px 7px;
+    border-radius: 2px;
+  }
+
+  .kpi-delta.up { background: rgba(16,185,129,0.1); color: var(--green); }
+  .kpi-delta.down { background: rgba(239,68,68,0.1); color: var(--red); }
+
+  /* Grid layout */
+  .grid-2 {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-bottom: 16px;
+  }
+
+  .grid-3 {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 16px;
+    margin-bottom: 16px;
+  }
+
+  .panel {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    overflow: hidden;
+  }
+
+  .panel-header {
+    padding: 14px 20px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .panel-title {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    color: var(--text-mid);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+
+  .panel-action {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px;
+    color: var(--purple);
+    cursor: pointer;
+    letter-spacing: 0.05em;
+    background: none;
+    border: none;
+  }
+
+  .panel-action:hover { color: var(--accent); }
+
+  .panel-body { padding: 20px; }
+
+  /* Quote follow-up table */
+  .data-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12px;
+  }
+
+  .data-table th {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px;
+    color: var(--text-dim);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    text-align: left;
+    padding: 8px 12px;
+    border-bottom: 1px solid var(--border);
+    cursor: pointer;
+    user-select: none;
+    white-space: nowrap;
+  }
+
+  .data-table th:hover { color: var(--accent); }
+  .data-table th .sort-arrow { margin-left: 4px; opacity: 0.4; }
+  .data-table th.sorted .sort-arrow { opacity: 1; color: var(--purple); }
+
+  .data-table td {
+    padding: 10px 12px;
+    border-bottom: 1px solid rgba(30,30,46,0.5);
+    font-size: 12px;
+    color: var(--text-mid);
+  }
+
+  .data-table tr:hover td { background: var(--surface2); color: var(--text); }
+  .data-table tr:last-child td { border-bottom: none; }
+
+  .status-badge {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 9px;
+    padding: 3px 8px;
+    border-radius: 2px;
+    letter-spacing: 0.08em;
+    font-weight: 600;
+  }
+
+  .status-badge.hot { background: rgba(239,68,68,0.15); color: var(--red); border: 1px solid rgba(239,68,68,0.3); }
+  .status-badge.warm { background: rgba(245,158,11,0.15); color: var(--amber); border: 1px solid rgba(245,158,11,0.3); }
+  .status-badge.cold { background: rgba(100,116,139,0.15); color: var(--text-dim); border: 1px solid rgba(100,116,139,0.3); }
+  .status-badge.won { background: rgba(16,185,129,0.15); color: var(--green); border: 1px solid rgba(16,185,129,0.3); }
+  .status-badge.followup { background: rgba(124,58,237,0.15); color: var(--accent); border: 1px solid rgba(124,58,237,0.3); }
+
+  .flag-cell { color: var(--red); font-size: 14px; }
+
+  /* Bar chart */
+  .bar-chart { padding: 0; }
+
+  .bar-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 12px;
+    cursor: pointer;
+  }
+
+  .bar-row:hover .bar-fill { filter: brightness(1.2); }
+
+  .bar-label {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px;
+    color: var(--text-mid);
+    width: 80px;
+    flex-shrink: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .bar-track {
+    flex: 1;
+    height: 8px;
+    background: var(--border);
+    border-radius: 1px;
+    overflow: hidden;
+  }
+
+  .bar-fill {
+    height: 100%;
+    border-radius: 1px;
+    background: var(--purple);
+    transition: width 0.6s ease;
+  }
+
+  .bar-fill.green { background: var(--green); }
+  .bar-fill.amber { background: var(--amber); }
+  .bar-fill.red { background: var(--red); }
+
+  .bar-val {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px;
+    color: var(--text-dim);
+    width: 50px;
+    text-align: right;
+    flex-shrink: 0;
+  }
+
+  /* Returns tracker */
+  .returns-list { display: flex; flex-direction: column; gap: 8px; }
+
+  .return-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 14px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 3px;
+    cursor: pointer;
+    transition: border-color 0.15s;
+  }
+
+  .return-item:hover { border-color: var(--purple); }
+
+  .return-info { flex: 1; }
+  .return-customer { font-size: 12px; font-weight: 600; color: var(--text); margin-bottom: 2px; }
+  .return-detail { font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: var(--text-dim); }
+
+  /* Manual hours widget */
+  .hours-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+
+  .hours-item {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 3px;
+    padding: 14px;
+  }
+
+  .hours-dept { font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: var(--text-dim); margin-bottom: 6px; letter-spacing: 0.08em; }
+  .hours-val { font-size: 22px; font-weight: 700; color: var(--amber); }
+  .hours-unit { font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: var(--text-dim); }
+
+  /* Visibility gap */
+  .gap-list { display: flex; flex-direction: column; gap: 8px; }
+
+  .gap-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 12px 14px;
+    background: var(--surface2);
+    border-left: 3px solid var(--red);
+    border-radius: 0 3px 3px 0;
+  }
+
+  .gap-code {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px;
+    color: var(--red);
+    flex-shrink: 0;
+    padding-top: 1px;
+  }
+
+  .gap-text { font-size: 12px; color: var(--text-mid); line-height: 1.5; }
+  .gap-action { font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: var(--text-dim); margin-top: 3px; }
+
+  /* Score ring */
+  .score-section { display: flex; align-items: center; gap: 24px; padding: 8px 0; }
+
+  .score-ring {
+    position: relative;
+    width: 100px;
+    height: 100px;
+    flex-shrink: 0;
+  }
+
+  .score-ring svg { transform: rotate(-90deg); }
+
+  .score-center {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .score-num { font-size: 22px; font-weight: 800; color: var(--text); }
+  .score-denom { font-family: 'IBM Plex Mono', monospace; font-size: 9px; color: var(--text-dim); }
+
+  .pillar-list { flex: 1; display: flex; flex-direction: column; gap: 8px; }
+
+  .pillar-row { display: flex; align-items: center; gap: 10px; cursor: pointer; }
+  .pillar-row:hover .pillar-name { color: var(--accent); }
+
+  .pillar-name { font-size: 11px; font-weight: 600; color: var(--text-mid); width: 110px; flex-shrink: 0; }
+  .pillar-track { flex: 1; height: 6px; background: var(--border); border-radius: 1px; overflow: hidden; }
+  .pillar-fill { height: 100%; border-radius: 1px; background: var(--purple); transition: width 0.8s ease; }
+  .pillar-pct { font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: var(--text-dim); width: 30px; text-align: right; }
+
+  /* Tooltip */
+  .tooltip {
+    position: fixed;
+    background: var(--surface2);
+    border: 1px solid var(--purple);
+    border-radius: 4px;
+    padding: 10px 14px;
+    font-size: 11px;
+    color: var(--text);
+    pointer-events: none;
+    z-index: 1000;
+    max-width: 220px;
+    display: none;
+    font-family: 'IBM Plex Mono', monospace;
+    line-height: 1.5;
+  }
+
+  /* Searchbar */
+  .search-input {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 2px;
+    padding: 6px 12px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    color: var(--text);
+    outline: none;
+    width: 200px;
+    transition: border-color 0.15s;
+  }
+
+  .search-input:focus { border-color: var(--purple); }
+  .search-input::placeholder { color: var(--text-dim); }
+
+  /* Modal */
+  .modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.7);
+    z-index: 500;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    backdrop-filter: blur(4px);
+  }
+
+  .modal-overlay.open { display: flex; }
+
+  .modal {
+    background: var(--surface);
+    border: 1px solid var(--purple);
+    border-radius: 6px;
+    padding: 28px;
+    max-width: 500px;
+    width: 90%;
+    position: relative;
+  }
+
+  .modal-close {
+    position: absolute;
+    top: 14px;
+    right: 16px;
+    background: none;
+    border: none;
+    color: var(--text-dim);
+    font-size: 18px;
+    cursor: pointer;
+  }
+
+  .modal-title {
+    font-size: 16px;
+    font-weight: 700;
+    margin-bottom: 16px;
+    color: var(--text);
+  }
+
+  .modal-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 8px 0;
+    border-bottom: 1px solid var(--border);
+    font-size: 12px;
+  }
+
+  .modal-row:last-child { border-bottom: none; }
+  .modal-key { color: var(--text-dim); font-family: 'IBM Plex Mono', monospace; font-size: 10px; }
+  .modal-val { color: var(--text); font-weight: 600; }
+
+  /* Section label */
+  .section-label {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px;
+    color: var(--text-dim);
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .section-label::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+
+  .recovery-banner {
+    background: linear-gradient(135deg, rgba(124,58,237,0.1), rgba(16,185,129,0.05));
+    border: 1px solid rgba(124,58,237,0.3);
+    border-radius: 4px;
+    padding: 16px 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 20px;
+  }
+
+  .recovery-label { font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: var(--text-dim); letter-spacing: 0.12em; text-transform: uppercase; margin-bottom: 4px; }
+  .recovery-value { font-size: 32px; font-weight: 800; color: var(--green); }
+  .recovery-note { font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: var(--text-dim); margin-top: 2px; }
+
+  @media (max-width: 900px) {
+    .kpi-row { grid-template-columns: repeat(2, 1fr); }
+    .grid-2, .grid-3 { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-left">
+    <div class="logo-mark">VAULT NEURON</div>
+    <div class="divider-v"></div>
+    <div class="header-title">Voelker Controls — Leadership</div>
+    <div class="header-badge">PHASE 1</div>
+  </div>
+  <div class="header-right">
+    <div class="last-updated">Updated 02:14 AM · Apr 3, 2026</div>
+    <div class="live-dot"></div>
+  </div>
+</div>
+
+<div class="main">
+
+  <!-- Recovery Banner -->
+  <div class="recovery-banner">
+    <div>
+      <div class="recovery-label">Total Recoverable Value Identified</div>
+      <div class="recovery-value">$1,672,908</div>
+      <div class="recovery-note">Conservative floor — pricing errors excluded (unmeasured)</div>
+    </div>
+    <div style="text-align:right;">
+      <div class="recovery-label">Diagnostic Score</div>
+      <div style="font-size:28px;font-weight:800;color:var(--amber)">191 / 425</div>
+      <div class="recovery-note">45% — Architecture Stress Identified</div>
+    </div>
+  </div>
+
+  <!-- KPI Row -->
+  <div class="kpi-row">
+    <div class="kpi-card" onclick="openModal('quotes')">
+      <div class="kpi-label">Open Quotes</div>
+      <div class="kpi-value">147</div>
+      <div class="kpi-sub">Active this month</div>
+      <div class="kpi-delta down">23 aging</div>
+    </div>
+    <div class="kpi-card red" onclick="openModal('followup')">
+      <div class="kpi-label">Quotes — No Follow-Up</div>
+      <div class="kpi-value red">31</div>
+      <div class="kpi-sub">≥5 business days cold</div>
+      <div class="kpi-delta down">↑ from 24</div>
+    </div>
+    <div class="kpi-card amber" onclick="openModal('returns')">
+      <div class="kpi-label">Open Returns</div>
+      <div class="kpi-value amber">8</div>
+      <div class="kpi-sub">3 past 14 days</div>
+      <div class="kpi-delta down">Unresolved</div>
+    </div>
+    <div class="kpi-card green" onclick="openModal('hours')">
+      <div class="kpi-label">Manual Hours — This Week</div>
+      <div class="kpi-value amber">51</div>
+      <div class="kpi-sub">Team self-reported</div>
+      <div class="kpi-delta down">$3,264 labor cost</div>
+    </div>
+  </div>
+
+  <!-- Section: Quote Follow-Up -->
+  <div class="section-label">Quote Follow-Up Tracker</div>
+
+  <div class="panel" style="margin-bottom:16px;">
+    <div class="panel-header">
+      <div class="panel-title">Aging Quotes — Flagged for Follow-Up</div>
+      <div style="display:flex;gap:10px;align-items:center;">
+        <input class="search-input" type="text" placeholder="Search customer..." oninput="filterQuotes(this.value)">
+        <select class="filter-select" onchange="filterByStatus(this.value)">
+          <option value="">All Status</option>
+          <option value="cold">Cold</option>
+          <option value="followup">Needs Follow-Up</option>
+          <option value="warm">Warm</option>
+          <option value="won">Won</option>
+        </select>
+        <button class="panel-action" onclick="sortTable()">Sort by Age ↕</button>
+      </div>
+    </div>
+    <div style="overflow-x:auto;">
+      <table class="data-table" id="quoteTable">
+        <thead>
+          <tr>
+            <th onclick="sortBy('customer')">Customer <span class="sort-arrow">↕</span></th>
+            <th onclick="sortBy('value')">Value <span class="sort-arrow">↕</span></th>
+            <th onclick="sortBy('days')">Days Open <span class="sort-arrow">↕</span></th>
+            <th onclick="sortBy('rep')">Rep <span class="sort-arrow">↕</span></th>
+            <th>Status</th>
+            <th>Flag</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody id="quoteBody">
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="grid-3" style="margin-bottom:16px;">
+    <!-- Revenue by Rep -->
+    <div class="panel">
+      <div class="panel-header">
+        <div class="panel-title">Quote Volume by Rep — MTD</div>
+        <select class="filter-select" onchange="filterRepChart(this.value)" style="font-size:10px;padding:4px 8px;">
+          <option value="volume">By Volume</option>
+          <option value="value">By Value</option>
+          <option value="winrate">By Win Rate</option>
+        </select>
+      </div>
+      <div class="panel-body">
+        <div class="bar-chart" id="repChart"></div>
+      </div>
+    </div>
+
+    <!-- Pillar Scores -->
+    <div class="panel">
+      <div class="panel-header">
+        <div class="panel-title">Operational Score</div>
+      </div>
+      <div class="panel-body">
+        <div class="score-section">
+          <div class="score-ring">
+            <svg width="100" height="100" viewBox="0 0 100 100">
+              <circle cx="50" cy="50" r="40" fill="none" stroke="#1E1E2E" stroke-width="8"/>
+              <circle cx="50" cy="50" r="40" fill="none" stroke="#7C3AED" stroke-width="8"
+                stroke-dasharray="251.2" stroke-dashoffset="138" stroke-linecap="round"/>
+            </svg>
+            <div class="score-center">
+              <div class="score-num">45%</div>
+              <div class="score-denom">191/425</div>
+            </div>
+          </div>
+          <div class="pillar-list" id="pillarList"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="grid-2" style="margin-bottom:16px;">
+    <!-- Returns Tracker -->
+    <div class="panel">
+      <div class="panel-header">
+        <div class="panel-title">Returns Tracker</div>
+        <select class="filter-select" onchange="filterReturns(this.value)" style="font-size:10px;padding:4px 8px;">
+          <option value="">All</option>
+          <option value="open">Open</option>
+          <option value="progress">In Progress</option>
+          <option value="closed">Closed</option>
+        </select>
+      </div>
+      <div class="panel-body">
+        <div class="returns-list" id="returnsList"></div>
+      </div>
+    </div>
+
+    <!-- Visibility Gaps -->
+    <div class="panel">
+      <div class="panel-header">
+        <div class="panel-title">Leadership Visibility Gaps</div>
+      </div>
+      <div class="panel-body">
+        <div class="gap-list">
+          <div class="gap-item">
+            <div class="gap-code">V4</div>
+            <div>
+              <div class="gap-text">Pricing error frequency — unknown at leadership level. One team member confirmed 52 errors/yr at ~$250 each.</div>
+              <div class="gap-action">→ Phase 1 will surface this through the vendor pricing repository</div>
+            </div>
+          </div>
+          <div class="gap-item">
+            <div class="gap-code">V5</div>
+            <div>
+              <div class="gap-text">Average cost per pricing error — not tracked. Business cannot prioritize the fix without this number.</div>
+              <div class="gap-action">→ Error log built in Phase 1 vendor audit</div>
+            </div>
+          </div>
+          <div class="gap-item">
+            <div class="gap-code">D3</div>
+            <div>
+              <div class="gap-text">Leadership counts 3 systems. Team averages 8.3. Shadow infrastructure is invisible from the top.</div>
+              <div class="gap-action">→ Process map documents all active tools</div>
+            </div>
+          </div>
+          <div class="gap-item">
+            <div class="gap-code">D4</div>
+            <div>
+              <div class="gap-text">Vendor performance tracked by "pattern recognition only." No structured data exists.</div>
+              <div class="gap-action">→ Vendor repository includes performance fields</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Manual Hours -->
+  <div class="section-label">Manual Labor Absorption</div>
+  <div class="panel" style="margin-bottom:16px;">
+    <div class="panel-header">
+      <div class="panel-title">Hours/Week on Manual Workarounds — By Department</div>
+      <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--red);">$121,472/yr team · $36,608/yr leadership</div>
+    </div>
+    <div class="panel-body">
+      <div class="hours-grid" id="hoursGrid"></div>
+    </div>
+  </div>
+
+</div>
+
+<!-- Modal -->
+<div class="modal-overlay" id="modalOverlay" onclick="closeModal(event)">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal()">✕</button>
+    <div class="modal-title" id="modalTitle"></div>
+    <div id="modalContent"></div>
+  </div>
+</div>
+
+<div class="tooltip" id="tooltip"></div>
+
+<script>
+// Data
+const quotes = [
+  { id:'Q-0412', customer:'Magna Seating', value:8400, days:12, rep:'J. Morris', status:'cold', flag:true },
+  { id:'Q-0389', customer:'Honda MFG', value:22100, days:9, rep:'T. Sellers', status:'followup', flag:true },
+  { id:'Q-0401', customer:'Yaskawa America', value:5600, days:7, rep:'J. Morris', status:'warm', flag:false },
+  { id:'Q-0415', customer:'Flex-N-Gate', value:3200, days:6, rep:'D. Walsh', status:'followup', flag:true },
+  { id:'Q-0378', customer:'Gentex Corp', value:14750, days:14, rep:'T. Sellers', status:'cold', flag:true },
+  { id:'Q-0422', customer:'Denso Mfg', value:9300, days:5, rep:'D. Walsh', status:'followup', flag:false },
+  { id:'Q-0388', customer:'Parker Hannifin', value:41200, days:3, rep:'J. Morris', status:'warm', flag:false },
+  { id:'Q-0405', customer:'SMC Pneumatics', value:6800, days:8, rep:'T. Sellers', status:'cold', flag:true },
+  { id:'Q-0431', customer:'Bosch Rexroth', value:18500, days:2, rep:'D. Walsh', status:'won', flag:false },
+  { id:'Q-0419', customer:'Festo Corp', value:7200, days:11, rep:'J. Morris', status:'cold', flag:true },
+  { id:'Q-0397', customer:'Cardinal Health', value:3100, days:4, rep:'T. Sellers', status:'warm', flag:false },
+  { id:'Q-0408', customer:'Midmark Corp', value:12400, days:6, rep:'D. Walsh', status:'followup', flag:true },
+];
+
+let filteredQuotes = [...quotes];
+let sortDir = 1;
+let sortField = 'days';
+
+const returns = [
+  { id:'R-041', customer:'Magna Seating', item:'MAC Valves 082B', date:'Mar 21', status:'open', owner:'K. Holt' },
+  { id:'R-038', customer:'Honda MFG', item:'SMC ZL112 Vacuum', date:'Mar 28', status:'progress', owner:'K. Holt' },
+  { id:'R-035', customer:'Flex-N-Gate', item:'Festo ADVU-50', date:'Mar 15', status:'open', owner:'Unassigned' },
+  { id:'R-033', customer:'Gentex Corp', item:'Parker P3N-K1', date:'Mar 10', status:'closed', owner:'M. Carr' },
+  { id:'R-040', customer:'Denso Mfg', item:'Bosch Valve Block', date:'Apr 1', status:'progress', owner:'K. Holt' },
+  { id:'R-042', customer:'Cardinal Health', item:'Yaskawa MH6', date:'Apr 2', status:'open', owner:'Unassigned' },
+  { id:'R-037', customer:'Midmark Corp', item:'Festo DSBC-80', date:'Mar 24', status:'closed', owner:'M. Carr' },
+  { id:'R-039', customer:'Parker Hannifin', item:'SMC SY7000', date:'Mar 30', status:'open', owner:'Unassigned' },
+];
+
+const reps = [
+  { name:'J. Morris', volume:52, value:312000, winrate:64 },
+  { name:'T. Sellers', volume:48, value:287000, winrate:59 },
+  { name:'D. Walsh', volume:47, value:198000, winrate:57 },
+];
+
+const pillars = [
+  { name:'P1 Vendor & Pricing', score:50, max:120, pct:42 },
+  { name:'P2 Workflow & Process', score:52, max:115, pct:45 },
+  { name:'P3 Decision Intel', score:52, max:105, pct:50 },
+  { name:'P4 Knowledge Risk', score:37, max:85, pct:44 },
+];
+
+const hours = [
+  { dept:'Customer Service', hrs:14, cost:22880 },
+  { dept:'Inside Sales', hrs:12, cost:19968 },
+  { dept:'Purchasing', hrs:10, cost:16640 },
+  { dept:'Accounting', hrs:8, cost:13312 },
+  { dept:'Leadership', hrs:12, cost:19968 },
+  { dept:'Field Sales', hrs:5, cost:8320 },
+];
+
+// Render quotes table
+function renderQuotes() {
+  const body = document.getElementById('quoteBody');
+  body.innerHTML = filteredQuotes.map(q => `
+    <tr onclick="openQuoteDetail('${q.id}')">
+      <td style="color:var(--text);font-weight:600;">${q.customer}<br><span style="font-family:'IBM Plex Mono',monospace;font-size:9px;color:var(--text-dim);">${q.id}</span></td>
+      <td style="color:var(--text);font-weight:600;">$${q.value.toLocaleString()}</td>
+      <td style="color:${q.days>=10?'var(--red)':q.days>=6?'var(--amber)':'var(--green)'}; font-family:'IBM Plex Mono',monospace;">${q.days}d</td>
+      <td>${q.rep}</td>
+      <td><span class="status-badge ${q.status}">${q.status.toUpperCase()}</span></td>
+      <td class="flag-cell">${q.flag ? '⚑' : ''}</td>
+      <td><button class="panel-action" onclick="event.stopPropagation();logFollowup('${q.id}')">Log Follow-Up</button></td>
+    </tr>
+  `).join('');
+}
+
+function filterQuotes(val) {
+  filteredQuotes = quotes.filter(q => q.customer.toLowerCase().includes(val.toLowerCase()) || q.id.toLowerCase().includes(val.toLowerCase()));
+  renderQuotes();
+}
+
+function filterByStatus(status) {
+  filteredQuotes = status ? quotes.filter(q => q.status === status) : [...quotes];
+  renderQuotes();
+}
+
+function sortTable() {
+  sortDir *= -1;
+  filteredQuotes.sort((a,b) => (a.days - b.days) * sortDir);
+  renderQuotes();
+}
+
+function sortBy(field) {
+  sortDir *= -1;
+  filteredQuotes.sort((a,b) => {
+    if(typeof a[field] === 'string') return a[field].localeCompare(b[field]) * sortDir;
+    return (a[field] - b[field]) * sortDir;
+  });
+  renderQuotes();
+}
+
+function logFollowup(id) {
+  const q = quotes.find(q=>q.id===id);
+  if(q) { q.status='followup'; q.flag=false; }
+  renderQuotes();
+}
+
+// Rep chart
+let repMetric = 'volume';
+function renderRepChart() {
+  const chart = document.getElementById('repChart');
+  const max = Math.max(...reps.map(r => r[repMetric]));
+  chart.innerHTML = reps.map(r => `
+    <div class="bar-row" onclick="openRepDetail('${r.name}')">
+      <div class="bar-label">${r.name}</div>
+      <div class="bar-track">
+        <div class="bar-fill" style="width:${(r[repMetric]/max*100)}%"></div>
+      </div>
+      <div class="bar-val">${repMetric==='value'?'$'+Math.round(r[repMetric]/1000)+'K':repMetric==='winrate'?r[repMetric]+'%':r[repMetric]}</div>
+    </div>
+  `).join('');
+}
+
+function filterRepChart(val) {
+  repMetric = val;
+  renderRepChart();
+}
+
+// Pillar list
+function renderPillars() {
+  const list = document.getElementById('pillarList');
+  list.innerHTML = pillars.map(p => `
+    <div class="pillar-row" onclick="openPillarDetail('${p.name}')">
+      <div class="pillar-name">${p.name}</div>
+      <div class="pillar-track">
+        <div class="pillar-fill" style="width:${p.pct}%"></div>
+      </div>
+      <div class="pillar-pct">${p.pct}%</div>
+    </div>
+  `).join('');
+}
+
+// Returns
+let returnFilter = '';
+function renderReturns() {
+  const list = document.getElementById('returnsList');
+  const data = returnFilter ? returns.filter(r=>r.status===returnFilter) : returns;
+  list.innerHTML = data.map(r => `
+    <div class="return-item" onclick="openReturnDetail('${r.id}')">
+      <div class="return-info">
+        <div class="return-customer">${r.customer} <span style="font-size:10px;color:var(--text-dim);font-weight:400;">${r.id}</span></div>
+        <div class="return-detail">${r.item} · ${r.date} · Owner: ${r.owner}</div>
+      </div>
+      <span class="status-badge ${r.status==='open'?'hot':r.status==='progress'?'warm':'won'}">${r.status.toUpperCase()}</span>
+    </div>
+  `).join('');
+}
+
+function filterReturns(val) {
+  returnFilter = val;
+  renderReturns();
+}
+
+// Hours grid
+function renderHours() {
+  const grid = document.getElementById('hoursGrid');
+  grid.innerHTML = hours.map(h => `
+    <div class="hours-item">
+      <div class="hours-dept">${h.dept}</div>
+      <div class="hours-val">${h.hrs}<span class="hours-unit"> hrs/wk</span></div>
+      <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--text-dim);margin-top:2px;">$${h.cost.toLocaleString()}/yr</div>
+    </div>
+  `).join('');
+}
+
+// Modals
+const modalData = {
+  quotes: { title: 'Quote Pipeline Overview', rows: [
+    ['Total Active Quotes','147'],['Flagged for Follow-Up','31'],['Average Days Open','6.4d'],['Avg Quote Value','$8,200'],['Estimated Cold Revenue at Risk','$254,800']
+  ]},
+  followup: { title: 'Follow-Up Revenue at Risk', rows: [
+    ['Quotes Cold ≥5 Days','31'],['Conservative Close Rate','60%'],['Avg Order Value','$4,500'],['Estimated Annual Loss','$972,000'],['Source','Team diagnostic responses']
+  ]},
+  returns: { title: 'Returns Summary', rows: [
+    ['Open Returns','4'],['In Progress','2'],['Closed This Month','2'],['Unassigned','3'],['Past 14 Days (open)','3']
+  ]},
+  hours: { title: 'Manual Labor Cost', rows: [
+    ['Team Manual Hours/Week','51'],['Leadership Hours/Week','12'],['Team Annual Cost','$121,472'],['Leadership Annual Cost','$36,608'],['Total Annual Absorption','$158,080']
+  ]},
+};
+
+function openModal(key) {
+  const d = modalData[key];
+  document.getElementById('modalTitle').textContent = d.title;
+  document.getElementById('modalContent').innerHTML = d.rows.map(([k,v]) => `
+    <div class="modal-row"><span class="modal-key">${k}</span><span class="modal-val">${v}</span></div>
+  `).join('');
+  document.getElementById('modalOverlay').classList.add('open');
+}
+
+function openQuoteDetail(id) {
+  const q = quotes.find(q=>q.id===id);
+  document.getElementById('modalTitle').textContent = `Quote ${q.id} — ${q.customer}`;
+  document.getElementById('modalContent').innerHTML = [
+    ['Value', '$'+q.value.toLocaleString()],
+    ['Days Open', q.days+'d'],
+    ['Rep', q.rep],
+    ['Status', q.status.toUpperCase()],
+    ['Flagged', q.flag ? 'YES — needs follow-up' : 'No'],
+    ['Est. Win Value at 60%', '$'+Math.round(q.value*0.6).toLocaleString()]
+  ].map(([k,v]) => `<div class="modal-row"><span class="modal-key">${k}</span><span class="modal-val">${v}</span></div>`).join('');
+  document.getElementById('modalOverlay').classList.add('open');
+}
+
+function openReturnDetail(id) {
+  const r = returns.find(r=>r.id===id);
+  document.getElementById('modalTitle').textContent = `Return ${r.id}`;
+  document.getElementById('modalContent').innerHTML = [
+    ['Customer', r.customer], ['Item', r.item], ['Initiated', r.date],
+    ['Status', r.status.toUpperCase()], ['Owner', r.owner]
+  ].map(([k,v]) => `<div class="modal-row"><span class="modal-key">${k}</span><span class="modal-val">${v}</span></div>`).join('');
+  document.getElementById('modalOverlay').classList.add('open');
+}
+
+function openRepDetail(name) {
+  const r = reps.find(r=>r.name===name);
+  document.getElementById('modalTitle').textContent = `Rep: ${r.name}`;
+  document.getElementById('modalContent').innerHTML = [
+    ['Quotes MTD', r.volume], ['Total Value', '$'+r.value.toLocaleString()], ['Win Rate', r.winrate+'%'],
+    ['Avg Quote Value', '$'+Math.round(r.value/r.volume).toLocaleString()]
+  ].map(([k,v]) => `<div class="modal-row"><span class="modal-key">${k}</span><span class="modal-val">${v}</span></div>`).join('');
+  document.getElementById('modalOverlay').classList.add('open');
+}
+
+function openPillarDetail(name) {
+  const p = pillars.find(p=>p.name===name);
+  document.getElementById('modalTitle').textContent = p.name;
+  document.getElementById('modalContent').innerHTML = [
+    ['Score', p.score+' / '+p.max], ['Percent', p.pct+'%'],
+    ['Status', p.pct<45?'Critical':'Stress Identified']
+  ].map(([k,v]) => `<div class="modal-row"><span class="modal-key">${k}</span><span class="modal-val">${v}</span></div>`).join('');
+  document.getElementById('modalOverlay').classList.add('open');
+}
+
+function closeModal(e) {
+  if(!e || e.target === document.getElementById('modalOverlay')) {
+    document.getElementById('modalOverlay').classList.remove('open');
+  }
+}
+
+// Init
+renderQuotes();
+renderRepChart();
+renderPillars();
+renderReturns();
+renderHours();
+</script>
+</body>
+</html>

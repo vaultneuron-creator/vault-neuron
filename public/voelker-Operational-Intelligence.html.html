@@ -1,0 +1,681 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Voelker Controls — Sales Team Dashboard · Phase 2</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Syne:wght@400;600;700;800&display=swap');
+
+  :root {
+    --bg: #08080F;
+    --surface: #0E0E1A;
+    --surface2: #13131F;
+    --border: #1E1E2E;
+    --purple: #7C3AED;
+    --purple-dim: #4C1D95;
+    --purple-glow: rgba(124,58,237,0.15);
+    --green: #10B981;
+    --red: #EF4444;
+    --amber: #F59E0B;
+    --blue: #3B82F6;
+    --text: #E2E8F0;
+    --text-dim: #64748B;
+    --text-mid: #94A3B8;
+    --accent: #A78BFA;
+    --teal: #06B6D4;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: var(--bg); color: var(--text); font-family: 'Syne', sans-serif; min-height: 100vh; }
+
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(124,58,237,0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(124,58,237,0.03) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  body::after {
+    content: '';
+    position: fixed;
+    bottom: -100px;
+    left: -100px;
+    width: 400px;
+    height: 400px;
+    background: radial-gradient(circle, rgba(6,182,212,0.05) 0%, transparent 70%);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .header { position: sticky; top: 0; z-index: 100; background: rgba(8,8,15,0.95); backdrop-filter: blur(12px); border-bottom: 1px solid var(--border); padding: 12px 24px; display: flex; align-items: center; justify-content: space-between; }
+  .header-left { display: flex; align-items: center; gap: 16px; }
+  .logo-mark { font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: var(--purple); letter-spacing: 0.15em; text-transform: uppercase; }
+  .divider-v { width: 1px; height: 20px; background: var(--border); }
+  .header-title { font-size: 13px; font-weight: 700; color: var(--text); letter-spacing: 0.05em; }
+  .header-badge { font-family: 'IBM Plex Mono', monospace; font-size: 10px; background: rgba(6,182,212,0.1); border: 1px solid rgba(6,182,212,0.3); color: var(--teal); padding: 3px 10px; border-radius: 2px; letter-spacing: 0.1em; }
+  .header-right { display: flex; align-items: center; gap: 12px; }
+  .last-updated { font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: var(--text-dim); }
+  .live-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--teal); animation: pulse 2s infinite; }
+  @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
+
+  .main { position: relative; z-index: 1; padding: 24px; max-width: 1400px; margin: 0 auto; }
+
+  .phase-banner { background: linear-gradient(135deg, rgba(6,182,212,0.08), rgba(124,58,237,0.08)); border: 1px solid rgba(6,182,212,0.2); border-radius: 4px; padding: 12px 20px; margin-bottom: 20px; display: flex; align-items: center; gap: 16px; font-family: 'IBM Plex Mono', monospace; font-size: 11px; }
+  .phase-tag { background: rgba(6,182,212,0.15); color: var(--teal); border: 1px solid rgba(6,182,212,0.3); padding: 3px 10px; border-radius: 2px; font-size: 10px; letter-spacing: 0.1em; flex-shrink: 0; }
+  .phase-desc { color: var(--text-mid); }
+  .phase-new { color: var(--teal); }
+
+  /* Personal stat bar */
+  .my-bar { background: linear-gradient(135deg, rgba(6,182,212,0.08), rgba(124,58,237,0.06)); border: 1px solid rgba(6,182,212,0.15); border-radius: 4px; padding: 16px 24px; display: flex; align-items: center; gap: 28px; margin-bottom: 20px; flex-wrap: wrap; }
+  .my-bar-label { font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: var(--text-dim); letter-spacing: 0.12em; text-transform: uppercase; margin-bottom: 4px; }
+  .my-bar-val { font-size: 22px; font-weight: 800; color: var(--text); }
+  .my-bar-val.green { color: var(--green); }
+  .my-bar-val.amber { color: var(--amber); }
+  .my-bar-val.red { color: var(--red); }
+  .my-bar-val.teal { color: var(--teal); }
+  .my-bar-divider { width: 1px; height: 40px; background: var(--border); }
+  .rep-selector { font-family: 'IBM Plex Mono', monospace; font-size: 11px; padding: 6px 14px; border: 1px solid rgba(6,182,212,0.3); background: rgba(6,182,212,0.05); color: var(--teal); border-radius: 2px; cursor: pointer; outline: none; margin-left: auto; }
+
+  .kpi-row { display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; margin-bottom: 20px; }
+  .kpi-card { background: var(--surface); border: 1px solid var(--border); padding: 18px; border-radius: 4px; position: relative; overflow: hidden; cursor: pointer; transition: border-color 0.2s; }
+  .kpi-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px; background: var(--purple); }
+  .kpi-card.green::before { background: var(--green); }
+  .kpi-card.teal::before { background: var(--teal); }
+  .kpi-card.amber::before { background: var(--amber); }
+  .kpi-card.red::before { background: var(--red); }
+  .kpi-card:hover { border-color: var(--purple); }
+  .kpi-label { font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: var(--text-dim); letter-spacing: 0.12em; text-transform: uppercase; margin-bottom: 8px; }
+  .kpi-value { font-size: 24px; font-weight: 800; color: var(--text); line-height: 1; margin-bottom: 4px; }
+  .kpi-value.green { color: var(--green); }
+  .kpi-value.amber { color: var(--amber); }
+  .kpi-value.teal { color: var(--teal); }
+  .kpi-value.red { color: var(--red); }
+  .kpi-sub { font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: var(--text-dim); }
+  .kpi-delta { position: absolute; top: 14px; right: 14px; font-family: 'IBM Plex Mono', monospace; font-size: 10px; padding: 2px 6px; border-radius: 2px; }
+  .kpi-delta.up { background: rgba(16,185,129,0.1); color: var(--green); }
+  .kpi-delta.down { background: rgba(239,68,68,0.1); color: var(--red); }
+
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px; }
+  .grid-wide { display: grid; grid-template-columns: 2fr 1fr; gap: 16px; margin-bottom: 16px; }
+
+  .panel { background: var(--surface); border: 1px solid var(--border); border-radius: 4px; overflow: hidden; }
+  .panel.teal-accent { border-color: rgba(6,182,212,0.2); }
+  .panel-header { padding: 14px 20px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px; }
+  .panel-title { font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: var(--text-mid); letter-spacing: 0.1em; text-transform: uppercase; }
+  .panel-new { font-family: 'IBM Plex Mono', monospace; font-size: 9px; color: var(--teal); background: rgba(6,182,212,0.1); border: 1px solid rgba(6,182,212,0.2); padding: 2px 7px; border-radius: 2px; letter-spacing: 0.08em; }
+  .panel-body { padding: 20px; }
+
+  .filter-select { font-family: 'IBM Plex Mono', monospace; font-size: 11px; padding: 5px 10px; border: 1px solid var(--border); background: var(--surface2); color: var(--text-mid); border-radius: 2px; cursor: pointer; outline: none; }
+  .filter-select:focus { border-color: var(--purple); }
+
+  /* Vendor pricing lookup */
+  .vendor-search { flex: 1; min-width: 200px; background: var(--surface2); border: 1px solid rgba(6,182,212,0.3); border-radius: 2px; padding: 10px 16px; font-family: 'IBM Plex Mono', monospace; font-size: 12px; color: var(--text); outline: none; transition: border-color 0.15s; }
+  .vendor-search:focus { border-color: var(--teal); }
+  .vendor-search::placeholder { color: var(--text-dim); }
+
+  .data-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+  .data-table th { font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: var(--text-dim); letter-spacing: 0.1em; text-transform: uppercase; text-align: left; padding: 8px 12px; border-bottom: 1px solid var(--border); cursor: pointer; user-select: none; white-space: nowrap; }
+  .data-table th:hover { color: var(--accent); }
+  .data-table td { padding: 10px 12px; border-bottom: 1px solid rgba(30,30,46,0.5); font-size: 12px; color: var(--text-mid); }
+  .data-table tr:hover td { background: var(--surface2); color: var(--text); }
+  .data-table tr:last-child td { border-bottom: none; }
+
+  .avail-badge { font-family: 'IBM Plex Mono', monospace; font-size: 9px; padding: 3px 8px; border-radius: 2px; letter-spacing: 0.08em; font-weight: 600; }
+  .avail-badge.in { background: rgba(16,185,129,0.15); color: var(--green); border: 1px solid rgba(16,185,129,0.3); }
+  .avail-badge.low { background: rgba(245,158,11,0.15); color: var(--amber); border: 1px solid rgba(245,158,11,0.3); }
+  .avail-badge.out { background: rgba(239,68,68,0.15); color: var(--red); border: 1px solid rgba(239,68,68,0.3); }
+
+  /* AI Quote Assistant */
+  .ai-chat-wrap { display: flex; flex-direction: column; height: 300px; }
+  .ai-messages { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; padding-bottom: 12px; }
+  .ai-msg { max-width: 90%; padding: 10px 14px; border-radius: 3px; font-size: 12px; line-height: 1.6; }
+  .ai-msg.system { background: rgba(6,182,212,0.08); border: 1px solid rgba(6,182,212,0.2); color: var(--text-mid); align-self: flex-start; }
+  .ai-msg.user { background: var(--purple-glow); border: 1px solid var(--purple-dim); color: var(--text); align-self: flex-end; }
+  .ai-input-wrap { display: flex; gap: 8px; padding-top: 12px; border-top: 1px solid var(--border); }
+  .ai-input { flex: 1; background: var(--surface2); border: 1px solid rgba(6,182,212,0.2); border-radius: 2px; padding: 8px 12px; font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: var(--text); outline: none; }
+  .ai-input:focus { border-color: var(--teal); }
+  .ai-send { background: rgba(6,182,212,0.15); border: 1px solid rgba(6,182,212,0.3); color: var(--teal); font-family: 'IBM Plex Mono', monospace; font-size: 11px; padding: 8px 16px; border-radius: 2px; cursor: pointer; }
+  .ai-send:hover { background: rgba(6,182,212,0.25); }
+
+  /* Quote items */
+  .quote-item { display: flex; align-items: center; justify-content: space-between; padding: 10px 14px; background: var(--surface2); border: 1px solid var(--border); border-radius: 3px; margin-bottom: 8px; cursor: pointer; transition: border-color 0.15s; }
+  .quote-item:hover { border-color: var(--teal); }
+  .quote-item.flagged { border-left: 3px solid var(--red); }
+  .quote-customer { font-size: 12px; font-weight: 600; color: var(--text); margin-bottom: 2px; }
+  .quote-detail { font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: var(--text-dim); }
+
+  /* Commission extended */
+  .commission-wrap { display: flex; flex-direction: column; gap: 12px; }
+  .commission-label { font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: var(--text-dim); letter-spacing: 0.1em; text-transform: uppercase; }
+  .commission-val { font-size: 28px; font-weight: 800; color: var(--green); }
+  .progress-track { width: 100%; height: 10px; background: var(--border); border-radius: 2px; overflow: hidden; margin: 8px 0; }
+  .progress-fill { height: 100%; border-radius: 2px; transition: width 0.8s; }
+  .commission-row { display: flex; justify-content: space-between; font-size: 12px; padding: 6px 0; border-bottom: 1px solid rgba(30,30,46,0.5); }
+  .commission-row:last-child { border-bottom: none; }
+  .commission-key { color: var(--text-dim); font-family: 'IBM Plex Mono', monospace; font-size: 10px; }
+  .commission-amount { color: var(--text); font-weight: 600; }
+
+  /* Win probability */
+  .win-prob-item { display: flex; align-items: center; gap: 12px; padding: 10px 0; border-bottom: 1px solid rgba(30,30,46,0.5); cursor: pointer; }
+  .win-prob-item:last-child { border-bottom: none; }
+  .win-prob-item:hover .wp-customer { color: var(--accent); }
+  .wp-customer { font-size: 12px; font-weight: 600; color: var(--text); width: 130px; flex-shrink: 0; }
+  .wp-track { flex: 1; height: 8px; background: var(--border); border-radius: 1px; overflow: hidden; }
+  .wp-fill { height: 100%; border-radius: 1px; transition: width 0.6s; }
+  .wp-pct { font-family: 'IBM Plex Mono', monospace; font-size: 11px; font-weight: 600; width: 38px; text-align: right; }
+
+  .section-label { font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: var(--text-dim); letter-spacing: 0.15em; text-transform: uppercase; margin-bottom: 12px; display: flex; align-items: center; gap: 8px; }
+  .section-label::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+  .section-label .new-tag { font-size: 9px; color: var(--teal); background: rgba(6,182,212,0.1); border: 1px solid rgba(6,182,212,0.2); padding: 2px 6px; border-radius: 2px; }
+
+  .filter-btn { font-family: 'IBM Plex Mono', monospace; font-size: 11px; padding: 5px 12px; border: 1px solid var(--border); background: var(--surface); color: var(--text-mid); border-radius: 2px; cursor: pointer; transition: all 0.15s; }
+  .filter-btn:hover, .filter-btn.active { border-color: var(--teal); color: var(--teal); background: rgba(6,182,212,0.08); }
+
+  /* Modal */
+  .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 500; display: none; align-items: center; justify-content: center; backdrop-filter: blur(4px); }
+  .modal-overlay.open { display: flex; }
+  .modal { background: var(--surface); border: 1px solid var(--teal); border-radius: 6px; padding: 28px; max-width: 500px; width: 90%; position: relative; }
+  .modal-close { position: absolute; top: 14px; right: 16px; background: none; border: none; color: var(--text-dim); font-size: 18px; cursor: pointer; }
+  .modal-title { font-size: 16px; font-weight: 700; margin-bottom: 16px; color: var(--text); }
+  .modal-row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid var(--border); font-size: 12px; }
+  .modal-row:last-child { border-bottom: none; }
+  .modal-key { color: var(--text-dim); font-family: 'IBM Plex Mono', monospace; font-size: 10px; }
+  .modal-val { color: var(--text); font-weight: 600; }
+
+  @media(max-width:900px) { .kpi-row{grid-template-columns:repeat(3,1fr);} .grid-2,.grid-wide{grid-template-columns:1fr;} }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-left">
+    <div class="logo-mark">VAULT NEURON</div>
+    <div class="divider-v"></div>
+    <div class="header-title">Voelker Controls — Sales Team</div>
+    <div class="header-badge">PHASE 2 · INTELLIGENCE LAYER</div>
+  </div>
+  <div class="header-right">
+    <div class="last-updated">Pricing + AI updated 02:14 AM · Apr 3, 2026</div>
+    <div class="live-dot"></div>
+  </div>
+</div>
+
+<div class="main">
+
+  <div class="phase-banner">
+    <div class="phase-tag">PHASE 2</div>
+    <div class="phase-desc">New in Phase 2: <span class="phase-new">AI quote assistant · Win probability scores · Cross-vendor comparison · Real-time commission tracking · Customer account intelligence · Expanded vendor repository</span></div>
+  </div>
+
+  <!-- My bar -->
+  <div class="my-bar">
+    <div>
+      <div class="my-bar-label">Viewing As</div>
+      <select class="rep-selector" id="repSelect" onchange="switchRep(this.value)">
+        <option value="morris">J. Morris</option>
+        <option value="sellers">T. Sellers</option>
+        <option value="walsh">D. Walsh</option>
+      </select>
+    </div>
+    <div class="my-bar-divider"></div>
+    <div>
+      <div class="my-bar-label">Open Quotes</div>
+      <div class="my-bar-val" id="myOpen">18</div>
+    </div>
+    <div class="my-bar-divider"></div>
+    <div>
+      <div class="my-bar-label">Win Rate MTD</div>
+      <div class="my-bar-val teal" id="myWin">64%</div>
+    </div>
+    <div class="my-bar-divider"></div>
+    <div>
+      <div class="my-bar-label">Commission YTD</div>
+      <div class="my-bar-val green" id="myComm">$14,820</div>
+    </div>
+    <div class="my-bar-divider"></div>
+    <div>
+      <div class="my-bar-label">Avg Close Time</div>
+      <div class="my-bar-val amber" id="myClose">4.2d</div>
+    </div>
+    <div class="my-bar-divider"></div>
+    <div>
+      <div class="my-bar-label">Pipeline Value</div>
+      <div class="my-bar-val" id="myPipeline">$186K</div>
+    </div>
+  </div>
+
+  <!-- KPIs -->
+  <div class="kpi-row">
+    <div class="kpi-card green">
+      <div class="kpi-label">Won MTD</div>
+      <div class="kpi-value green" id="kpiWon">11</div>
+      <div class="kpi-sub" id="kpiWonVal">$141K closed</div>
+      <div class="kpi-delta up">↑ from 8</div>
+    </div>
+    <div class="kpi-card teal">
+      <div class="kpi-label">Avg Win Probability</div>
+      <div class="kpi-value teal" id="kpiWinProb">61%</div>
+      <div class="kpi-sub">Across open pipeline</div>
+      <div class="kpi-delta up">Phase 2 metric</div>
+    </div>
+    <div class="kpi-card amber">
+      <div class="kpi-label">Turnaround</div>
+      <div class="kpi-value amber">1.4d</div>
+      <div class="kpi-sub">Avg quote delivery</div>
+      <div class="kpi-delta up">↓ from 3.2d</div>
+    </div>
+    <div class="kpi-card red" id="coldCard">
+      <div class="kpi-label">Cold Quotes</div>
+      <div class="kpi-value red" id="kpiCold">3</div>
+      <div class="kpi-sub">≥5 days no touch</div>
+      <div class="kpi-delta down">Act now</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">Vendors in Repo</div>
+      <div class="kpi-value">10</div>
+      <div class="kpi-sub">All integrated</div>
+      <div class="kpi-delta up">Live</div>
+    </div>
+  </div>
+
+  <!-- Vendor lookup + AI Assistant -->
+  <div class="section-label">Vendor Pricing Repository</div>
+  <div class="panel" style="margin-bottom:16px;">
+    <div class="panel-header">
+      <div class="panel-title">Part & Pricing Lookup</div>
+      <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
+        <input class="vendor-search" type="text" placeholder="Search part, description, or vendor..." oninput="searchVendors(this.value)" style="min-width:220px;">
+        <select class="filter-select" onchange="filterVendor(this.value)">
+          <option value="">All Vendors</option>
+          <option value="MAC Valves">MAC Valves</option>
+          <option value="SMC">SMC</option>
+          <option value="Festo">Festo</option>
+          <option value="Parker">Parker</option>
+          <option value="Bosch Rexroth">Bosch Rexroth</option>
+          <option value="Yaskawa">Yaskawa</option>
+          <option value="Turck">Turck</option>
+          <option value="Banner">Banner</option>
+          <option value="Balluff">Balluff</option>
+          <option value="Keyence">Keyence</option>
+        </select>
+        <select class="filter-select" onchange="filterAvail(this.value)">
+          <option value="">All Availability</option>
+          <option value="in">In Stock</option>
+          <option value="low">Low Stock</option>
+          <option value="out">Out of Stock</option>
+        </select>
+        <select class="filter-select" onchange="sortByPrice(this.value)">
+          <option value="">Sort: Default</option>
+          <option value="asc">Price: Low → High</option>
+          <option value="desc">Price: High → Low</option>
+        </select>
+      </div>
+    </div>
+    <div style="overflow-x:auto;">
+      <table class="data-table" id="vendorTable">
+        <thead>
+          <tr>
+            <th>Vendor</th>
+            <th>Part Number</th>
+            <th>Description</th>
+            <th>Unit Price</th>
+            <th>Lead Time</th>
+            <th>Availability</th>
+            <th>Vendor Score</th>
+            <th>Source</th>
+            <th>Updated</th>
+          </tr>
+        </thead>
+        <tbody id="vendorBody"></tbody>
+      </table>
+    </div>
+    <div style="padding:10px 20px;border-top:1px solid var(--border);font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--text-dim);">
+      <span id="vendorCount">24 records</span> · <span style="color:var(--teal);">Phase 2: Vendor score added to every record</span>
+    </div>
+  </div>
+
+  <!-- Win Probability + AI Quote Assistant -->
+  <div class="section-label">Intelligence Layer <span class="new-tag">PHASE 2</span></div>
+  <div class="grid-wide" style="margin-bottom:16px;">
+    <!-- AI Quote Assistant -->
+    <div class="panel teal-accent">
+      <div class="panel-header">
+        <div class="panel-title">AI Quote Assistant</div>
+        <div class="panel-new">PHASE 2</div>
+      </div>
+      <div class="panel-body">
+        <div class="ai-chat-wrap">
+          <div class="ai-messages" id="aiMessages">
+            <div class="ai-msg system">Ready. Ask me anything about pricing, vendor availability, quote status, or customer history. Try: "What's the best price for SMC ZL112-K?" or "Which of my quotes need follow-up today?"</div>
+          </div>
+          <div class="ai-input-wrap">
+            <input class="ai-input" type="text" id="aiInput" placeholder="Ask about parts, customers, or quotes..." onkeydown="if(event.key==='Enter')sendAI()">
+            <button class="ai-send" onclick="sendAI()">Ask →</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Win Probability -->
+    <div class="panel">
+      <div class="panel-header">
+        <div class="panel-title">Win Probability</div>
+        <div class="panel-new">PHASE 2</div>
+      </div>
+      <div class="panel-body" id="winProbList" style="max-height:300px;overflow-y:auto;"></div>
+    </div>
+  </div>
+
+  <!-- My Quotes + Commission -->
+  <div class="grid-2">
+    <div class="panel">
+      <div class="panel-header">
+        <div class="panel-title">My Quotes</div>
+        <div style="display:flex;gap:6px;">
+          <button class="filter-btn active" onclick="setFilter('all',this)">All</button>
+          <button class="filter-btn" onclick="setFilter('cold',this)">Cold</button>
+          <button class="filter-btn" onclick="setFilter('warm',this)">Warm</button>
+          <button class="filter-btn" onclick="setFilter('won',this)">Won</button>
+        </div>
+      </div>
+      <div class="panel-body" id="myQuoteList" style="max-height:400px;overflow-y:auto;padding-top:8px;"></div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-header">
+        <div class="panel-title">Commission Tracker</div>
+        <div class="panel-new">LIVE — Phase 2</div>
+      </div>
+      <div class="panel-body">
+        <div class="commission-wrap">
+          <div>
+            <div class="commission-label">YTD Commission Earned</div>
+            <div class="commission-val" id="commVal">$14,820</div>
+            <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--text-dim);margin-top:2px;">Real-time · Updates on invoice close</div>
+          </div>
+          <div>
+            <div style="display:flex;justify-content:space-between;margin-bottom:4px;">
+              <div class="commission-label">Progress to Annual Target</div>
+              <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--green);" id="commPct">49%</div>
+            </div>
+            <div class="progress-track">
+              <div class="progress-fill" id="commBar" style="width:49%;background:linear-gradient(90deg,var(--purple),var(--teal));"></div>
+            </div>
+          </div>
+          <div>
+            <div class="commission-row"><span class="commission-key">Closed Revenue YTD</span><span class="commission-amount" id="ytdRev">$312,000</span></div>
+            <div class="commission-row"><span class="commission-key">Gross Margin (est.)</span><span class="commission-amount" id="ytdMargin">$93,600</span></div>
+            <div class="commission-row"><span class="commission-key">Commission Rate</span><span class="commission-amount">5%</span></div>
+            <div class="commission-row"><span class="commission-key">Annual Target</span><span class="commission-amount">$30,000</span></div>
+            <div class="commission-row"><span class="commission-key">Projected YE Commission</span><span class="commission-amount" id="projected" style="color:var(--teal);">$29,640</span></div>
+            <div class="commission-row"><span class="commission-key">Remaining to Target</span><span class="commission-amount" id="remaining" style="color:var(--amber);">$15,180</span></div>
+          </div>
+          <div style="font-family:'IBM Plex Mono',monospace;font-size:9px;color:var(--text-dim);padding-top:8px;border-top:1px solid var(--border);">
+            Phase 2 delivers monthly commission reporting. Phase 1 baseline was year-end only.
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<div class="modal-overlay" id="modalOverlay" onclick="closeModal(event)">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal()">✕</button>
+    <div class="modal-title" id="modalTitle"></div>
+    <div id="modalContent"></div>
+  </div>
+</div>
+
+<script>
+const vendorScores = { 'SMC':88, 'Parker':84, 'Festo':82, 'Turck':80, 'Banner':79, 'Bosch Rexroth':71, 'Yaskawa':68, 'Balluff':65, 'MAC Valves':62, 'Keyence':58 };
+
+const vendorData = [
+  { vendor:'SMC', part:'ZL112-K', desc:'Vacuum Ejector w/ Sensor', price:284.50, lead:'3-5 days', avail:'in', source:'API', updated:'Apr 3, 02:14' },
+  { vendor:'SMC', part:'SY7120-5LZD', desc:'5-Port Solenoid Valve', price:142.80, lead:'In Stock', avail:'in', source:'API', updated:'Apr 3, 02:14' },
+  { vendor:'SMC', part:'CQ2B40-50D', desc:'Compact Cylinder 40mm', price:89.20, lead:'2-3 days', avail:'in', source:'API', updated:'Apr 3, 02:14' },
+  { vendor:'MAC Valves', part:'082B-611CAAA', desc:'4-Way Valve 24VDC', price:198.00, lead:'7-10 days', avail:'low', source:'PDF', updated:'Apr 2, 02:14' },
+  { vendor:'MAC Valves', part:'45A-L00-DAAA', desc:'Bullet Valve NO', price:124.50, lead:'5-7 days', avail:'in', source:'PDF', updated:'Apr 2, 02:14' },
+  { vendor:'MAC Valves', part:'56C-11-DDBA', desc:'Proportional Valve', price:342.00, lead:'14 days', avail:'low', source:'PDF', updated:'Apr 2, 02:14' },
+  { vendor:'Festo', part:'ADVU-50-100-A-P-A', desc:'Compact Cylinder', price:317.40, lead:'4-6 days', avail:'in', source:'API', updated:'Apr 3, 02:14' },
+  { vendor:'Festo', part:'DSBC-80-160-PPVA', desc:'Std Cylinder 80mm', price:428.60, lead:'3-5 days', avail:'in', source:'API', updated:'Apr 3, 02:14' },
+  { vendor:'Parker', part:'P3N-K1-1', desc:'Pneumatic Regulator 1/4"', price:156.80, lead:'3-5 days', avail:'in', source:'API', updated:'Apr 3, 02:14' },
+  { vendor:'Parker', part:'4-1/4-110-2', desc:'1/4" Prep-Air II Filter', price:78.40, lead:'2 days', avail:'in', source:'API', updated:'Apr 3, 02:14' },
+  { vendor:'Bosch Rexroth', part:'0820043996', desc:'Valve Block 4-Station', price:612.00, lead:'7-10 days', avail:'in', source:'Portal', updated:'Apr 2' },
+  { vendor:'Bosch Rexroth', part:'R422101276', desc:'Pneumatic Cylinder', price:284.50, lead:'14-21 days', avail:'out', source:'Portal', updated:'Apr 2' },
+  { vendor:'Yaskawa', part:'MOTOMAN-MH6', desc:'6-Axis Robot Arm', price:24800.00, lead:'12-16 wks', avail:'low', source:'Portal', updated:'Apr 1' },
+  { vendor:'Yaskawa', part:'SGMAV-04ADA21', desc:'Servo Motor 400W', price:892.00, lead:'4-6 weeks', avail:'in', source:'Portal', updated:'Apr 1' },
+  { vendor:'Turck', part:'BI5-M18-AD4X', desc:'Inductive Sensor M18', price:68.40, lead:'2-3 days', avail:'in', source:'API', updated:'Apr 3, 02:14' },
+  { vendor:'Turck', part:'BCM8.9-Q40-AN4X2', desc:'Capacitive Sensor', price:142.60, lead:'3-4 days', avail:'in', source:'API', updated:'Apr 3, 02:14' },
+  { vendor:'Banner', part:'Q45VR3LV', desc:'Retroreflective Sensor', price:312.00, lead:'1-2 days', avail:'in', source:'API', updated:'Apr 3, 02:14' },
+  { vendor:'Balluff', part:'BTL7-E10-M0200-P-S32', desc:'Magnetostrictive Sensor', price:742.50, lead:'4-6 weeks', avail:'low', source:'Excel', updated:'Apr 1' },
+  { vendor:'Balluff', part:'BOS 6K-PO-1RD10-S49', desc:'Optical Sensor', price:89.30, lead:'3-5 days', avail:'in', source:'Excel', updated:'Apr 1' },
+  { vendor:'Keyence', part:'IV2-G500MA', desc:'Vision System 5MP', price:4280.00, lead:'2-3 weeks', avail:'in', source:'Portal', updated:'Mar 31' },
+  { vendor:'Keyence', part:'LJ-X8400', desc:'3D Laser Profiler', price:8920.00, lead:'4-6 weeks', avail:'low', source:'Portal', updated:'Mar 31' },
+  { vendor:'SMC', part:'VQ4100N-51', desc:'Double Sol Valve 24V', price:224.50, lead:'5-7 days', avail:'in', source:'API', updated:'Apr 3, 02:14' },
+  { vendor:'Parker', part:'HMRS-3/8-B', desc:'Miniature Regulator', price:112.40, lead:'3 days', avail:'in', source:'API', updated:'Apr 3, 02:14' },
+  { vendor:'Festo', part:'VPPM-6L-L-1-G18', desc:'Proportional Pressure Reg', price:891.20, lead:'10-14 days', avail:'low', source:'API', updated:'Apr 3, 02:14' },
+];
+
+let filteredV = [...vendorData], vSearch='', vVendor='', vAvail='', vSort='';
+
+function applyVFilters() {
+  filteredV = vendorData.filter(v => {
+    const s = vSearch.toLowerCase();
+    const m1 = !s || v.part.toLowerCase().includes(s) || v.desc.toLowerCase().includes(s) || v.vendor.toLowerCase().includes(s);
+    const m2 = !vVendor || v.vendor === vVendor;
+    const m3 = !vAvail || v.avail === vAvail;
+    return m1 && m2 && m3;
+  });
+  if(vSort==='asc') filteredV.sort((a,b)=>a.price-b.price);
+  if(vSort==='desc') filteredV.sort((a,b)=>b.price-a.price);
+  renderVendors();
+}
+
+function searchVendors(v) { vSearch=v; applyVFilters(); }
+function filterVendor(v) { vVendor=v; applyVFilters(); }
+function filterAvail(v) { vAvail=v; applyVFilters(); }
+function sortByPrice(v) { vSort=v; applyVFilters(); }
+
+function renderVendors() {
+  document.getElementById('vendorCount').textContent = filteredV.length+' records';
+  document.getElementById('vendorBody').innerHTML = filteredV.map(v => {
+    const score = vendorScores[v.vendor];
+    return `
+    <tr onclick="openVendorModal('${v.part}')">
+      <td style="font-weight:600;color:var(--text);">${v.vendor}</td>
+      <td style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--accent);">${v.part}</td>
+      <td>${v.desc}</td>
+      <td style="font-weight:700;color:var(--text);">$${v.price.toLocaleString(undefined,{minimumFractionDigits:2})}</td>
+      <td style="font-family:'IBM Plex Mono',monospace;font-size:10px;">${v.lead}</td>
+      <td><span class="avail-badge ${v.avail}">${v.avail==='in'?'IN STOCK':v.avail==='low'?'LOW STOCK':'OUT'}</span></td>
+      <td style="color:${score>=80?'var(--green)':score>=65?'var(--amber)':'var(--red)'};font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:600;">${score}/100</td>
+      <td style="font-family:'IBM Plex Mono',monospace;font-size:9px;color:var(--text-dim);">${v.source}</td>
+      <td style="font-family:'IBM Plex Mono',monospace;font-size:9px;color:var(--text-dim);">${v.updated}</td>
+    </tr>`;
+  }).join('');
+}
+
+// Rep data
+const repData = {
+  morris: { open:18, win:'64%', comm:'$14,820', close:'4.2d', pipeline:'$186K', won:11, wonVal:'$141K', commNum:14820, commPct:49, ytdRev:'$312,000', ytdMargin:'$93,600', projected:'$29,640', remaining:'$15,180', winProb:61,
+    quotes:[
+      { id:'Q-0412', customer:'Magna Seating', value:8400, days:12, status:'cold', flag:true, prob:18 },
+      { id:'Q-0401', customer:'Yaskawa America', value:5600, days:7, status:'warm', flag:false, prob:54 },
+      { id:'Q-0388', customer:'Parker Hannifin', value:41200, days:3, status:'warm', flag:false, prob:72 },
+      { id:'Q-0428', customer:'SMC Pneumatics', value:12400, days:1, status:'warm', flag:false, prob:81 },
+      { id:'Q-0416', customer:'Turck Inc', value:3800, days:2, status:'won', flag:false, prob:100 },
+      { id:'Q-0419', customer:'Festo Corp', value:7200, days:11, status:'cold', flag:true, prob:22 },
+    ]
+  },
+  sellers: { open:16, win:'59%', comm:'$11,240', close:'5.1d', pipeline:'$162K', won:9, wonVal:'$112K', commNum:11240, commPct:37, ytdRev:'$287,000', ytdMargin:'$86,100', projected:'$22,480', remaining:'$18,760', winProb:54,
+    quotes:[
+      { id:'Q-0389', customer:'Honda MFG', value:22100, days:9, status:'followup', flag:true, prob:12 },
+      { id:'Q-0378', customer:'Gentex Corp', value:14750, days:14, status:'cold', flag:true, prob:8 },
+      { id:'Q-0421', customer:'Bosch Rexroth', value:9800, days:2, status:'warm', flag:false, prob:66 },
+      { id:'Q-0397', customer:'Cardinal Health', value:3100, days:4, status:'warm', flag:false, prob:70 },
+      { id:'Q-0405', customer:'SMC Pneumatics', value:6800, days:8, status:'cold', flag:true, prob:32 },
+    ]
+  },
+  walsh: { open:13, win:'57%', comm:'$9,870', close:'4.8d', pipeline:'$124K', won:8, wonVal:'$98K', commNum:9870, commPct:33, ytdRev:'$198,000', ytdMargin:'$59,400', projected:'$19,740', remaining:'$20,130', winProb:58,
+    quotes:[
+      { id:'Q-0415', customer:'Flex-N-Gate', value:3200, days:6, status:'followup', flag:true, prob:41 },
+      { id:'Q-0422', customer:'Denso Mfg', value:9300, days:5, status:'followup', flag:false, prob:55 },
+      { id:'Q-0431', customer:'Bosch Rexroth', value:18500, days:2, status:'won', flag:false, prob:100 },
+      { id:'Q-0408', customer:'Midmark Corp', value:12400, days:6, status:'followup', flag:true, prob:38 },
+      { id:'Q-0433', customer:'Keyence Corp', value:4800, days:1, status:'warm', flag:false, prob:74 },
+    ]
+  },
+};
+
+let currentRep = 'morris', myFilter = 'all';
+
+function switchRep(rep) {
+  currentRep = rep;
+  const d = repData[rep];
+  document.getElementById('myOpen').textContent = d.open;
+  document.getElementById('myWin').textContent = d.win;
+  document.getElementById('myComm').textContent = d.comm;
+  document.getElementById('myClose').textContent = d.close;
+  document.getElementById('myPipeline').textContent = d.pipeline;
+  document.getElementById('kpiWon').textContent = d.won;
+  document.getElementById('kpiWonVal').textContent = '$'+d.wonVal+' closed';
+  document.getElementById('kpiWinProb').textContent = d.winProb+'%';
+  document.getElementById('kpiCold').textContent = d.quotes.filter(q=>q.status==='cold'||q.status==='followup').length;
+  document.getElementById('commVal').textContent = d.comm;
+  document.getElementById('commPct').textContent = d.commPct+'%';
+  document.getElementById('commBar').style.width = d.commPct+'%';
+  document.getElementById('ytdRev').textContent = d.ytdRev;
+  document.getElementById('ytdMargin').textContent = d.ytdMargin;
+  document.getElementById('projected').textContent = d.projected;
+  document.getElementById('remaining').textContent = d.remaining;
+  renderMyQuotes();
+  renderWinProb();
+}
+
+function setFilter(f, btn) {
+  myFilter = f;
+  document.querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  renderMyQuotes();
+}
+
+function renderMyQuotes() {
+  const d = repData[currentRep];
+  const quotes = myFilter==='all' ? d.quotes : d.quotes.filter(q=>q.status===myFilter);
+  const list = document.getElementById('myQuoteList');
+  if(!quotes.length) { list.innerHTML='<div style="font-family:\'IBM Plex Mono\',monospace;font-size:11px;color:var(--text-dim);padding:16px;text-align:center;">No quotes match filter</div>'; return; }
+  list.innerHTML = quotes.map(q => `
+    <div class="quote-item ${q.flag?'flagged':''}" onclick="openQuoteModal('${q.id}')">
+      <div>
+        <div class="quote-customer">${q.customer} <span style="font-family:'IBM Plex Mono',monospace;font-size:9px;color:var(--text-dim);">${q.id}</span></div>
+        <div class="quote-detail">$${q.value.toLocaleString()} · ${q.days}d · Win prob: <span style="color:${q.prob>=60?'var(--green)':q.prob>=35?'var(--amber)':'var(--red)'};">${q.prob}%</span>${q.flag?' · ⚑':''}</div>
+      </div>
+      <span class="avail-badge ${q.status==='cold'||q.status==='followup'?'low':q.status==='won'?'in':'low'}">${q.status.toUpperCase()}</span>
+    </div>
+  `).join('');
+}
+
+function renderWinProb() {
+  const d = repData[currentRep];
+  const list = document.getElementById('winProbList');
+  list.innerHTML = d.quotes.filter(q=>q.status!=='won').map(q => `
+    <div class="win-prob-item" onclick="openQuoteModal('${q.id}')">
+      <div class="wp-customer">${q.customer}</div>
+      <div class="wp-track">
+        <div class="wp-fill" style="width:${q.prob}%;background:${q.prob>=60?'var(--green)':q.prob>=35?'var(--amber)':'var(--red)'}"></div>
+      </div>
+      <div class="wp-pct" style="color:${q.prob>=60?'var(--green)':q.prob>=35?'var(--amber)':'var(--red)'};">${q.prob}%</div>
+    </div>
+  `).join('');
+}
+
+// AI responses
+const aiResponses = {
+  'smc zl112': 'SMC ZL112-K · Vacuum Ejector w/ Sensor · $284.50 · In Stock · Lead: 3-5 days · Vendor Score: 88/100 — High confidence pricing (API source).',
+  'follow up': () => {
+    const d = repData[currentRep];
+    const cold = d.quotes.filter(q=>q.flag);
+    return cold.length ? `You have ${cold.length} quote(s) needing follow-up: ${cold.map(q=>q.customer+' ('+q.days+'d, win prob '+q.prob+'%)').join(', ')}.` : 'No flagged quotes right now. Good work.';
+  },
+  'commission': () => `Your YTD commission is ${repData[currentRep].comm}. Projected year-end: ${repData[currentRep].projected}.`,
+  'mac valves': 'MAC Valves pricing is sourced from PDF catalog — last update Apr 2. Note: 8 pricing errors this month from stale MAC data. Verify before sending quote.',
+  'honda': 'Honda MFG (Q-0389) · $22,100 · 9 days cold · Win probability: 12%. Recommend immediate outreach — drops further after day 10.',
+  'win rate': () => `Your current MTD win rate is ${repData[currentRep].win}. Phase 1 baseline was 59%. The follow-up system is the primary driver.`,
+  'bosch': 'Bosch Rexroth lead times extended to 14-21 days (up from 5-7). Three open quotes may miss customer delivery expectations.',
+  default: "I don't have specific data on that yet. Try asking about a part number, vendor name, customer, or your quote status.",
+};
+
+function getAIResponse(input) {
+  const lower = input.toLowerCase();
+  for(const [key, val] of Object.entries(aiResponses)) {
+    if(key !== 'default' && lower.includes(key)) {
+      return typeof val === 'function' ? val() : val;
+    }
+  }
+  return aiResponses.default;
+}
+
+function sendAI() {
+  const input = document.getElementById('aiInput');
+  const val = input.value.trim();
+  if(!val) return;
+  const msgs = document.getElementById('aiMessages');
+  msgs.innerHTML += `<div class="ai-msg user">${val}</div>`;
+  const response = getAIResponse(val);
+  setTimeout(() => {
+    msgs.innerHTML += `<div class="ai-msg system">${response}</div>`;
+    msgs.scrollTop = msgs.scrollHeight;
+  }, 400);
+  input.value = '';
+  msgs.scrollTop = msgs.scrollHeight;
+}
+
+function openVendorModal(part) {
+  const v = vendorData.find(v=>v.part===part);
+  const score = vendorScores[v.vendor];
+  document.getElementById('modalTitle').textContent = v.vendor+' — '+v.part;
+  document.getElementById('modalContent').innerHTML = [
+    ['Description', v.desc],
+    ['Unit Price', '$'+v.price.toLocaleString(undefined,{minimumFractionDigits:2})],
+    ['Lead Time', v.lead],
+    ['Availability', v.avail==='in'?'In Stock':v.avail==='low'?'Low Stock':'Out of Stock'],
+    ['Vendor Score', score+'/100'],
+    ['Data Source', v.source],
+    ['Last Updated', v.updated],
+  ].map(([k,val])=>`<div class="modal-row"><span class="modal-key">${k}</span><span class="modal-val">${val}</span></div>`).join('');
+  document.getElementById('modalOverlay').classList.add('open');
+}
+
+function openQuoteModal(id) {
+  const d = repData[currentRep];
+  const q = d.quotes.find(q=>q.id===id);
+  document.getElementById('modalTitle').textContent = `${q.id} — ${q.customer}`;
+  document.getElementById('modalContent').innerHTML = [
+    ['Value','$'+q.value.toLocaleString()],
+    ['Days Open',q.days+'d'],
+    ['Status',q.status.toUpperCase()],
+    ['Win Probability',q.prob+'%'],
+    ['Action Needed',q.flag?'⚑ Follow up immediately':'Monitor'],
+    ['Est. Win Value at '+q.prob+'%','$'+Math.round(q.value*q.prob/100).toLocaleString()]
+  ].map(([k,v])=>`<div class="modal-row"><span class="modal-key">${k}</span><span class="modal-val">${v}</span></div>`).join('');
+  document.getElementById('modalOverlay').classList.add('open');
+}
+
+function closeModal(e) {
+  if(!e||e.target===document.getElementById('modalOverlay')) document.getElementById('modalOverlay').classList.remove('open');
+}
+
+renderVendors();
+renderMyQuotes();
+renderWinProb();
+</script>
+</body>
+</html>
